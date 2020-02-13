@@ -1,0 +1,14 @@
+
+data Bool 
+  = True
+  | False
+
+let main : IO
+  = a := 10
+  | b := [ a b -> a + b * c ]
+  | c := b 10 2
+  ; match a with
+    | 10 -> print "10"
+    | 0 -> ()
+  end
+  print "end"
