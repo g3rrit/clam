@@ -54,7 +54,70 @@ parseVariant = do
 -- EXPRESSION
 
 parseExp :: Parser Exp
-parseExp = undefined
+parseExp = (try parseESeqPar) <|> parseExpPrim <?> "expression"
+
+parseExpPrim :: Parser Exp
+parseExpPrim = bracket "(" parseExp ")"
+  <|> (try parseELam)
+  <|> (try parseECase)
+  <|> (try parseEConst)
+  <|> (try parseEPrim)
+  <|> (try parseELet)
+  <|> parseEVar
+
+parseEVar :: Parser Exp
+parseEVar = EVar <$> lName
+
+parseEPrim :: Parser Exp
+parseEPrim = EPrim <$> parsePrim
+
+parsePrim :: Parser Prim
+parsePrim = PInt <$> integer
+
+parseESeqPar :: Parser Exp
+parseESeqPar = CB.chainl1 parseExpPrim ((EPar <$ (string "|")) <|> (ESeq <$ (string ";")))
+
+parseELet :: Parser Exp
+parseELet = do
+  n  <- lName
+  string ":"
+  mt <- CB.optionMaybe parseType
+  string "="
+  e  <-parseExpPrim
+  return $ ELet n mt e
+
+parseEConst :: Parser Exp
+parseEConst = EConst <$> uName
+
+parseEAp :: Parser Exp
+parseEAp = CB.chainl1 parseExpPrim $ return EAp
+
+parseELam :: Parser Exp
+parseELam = do
+  try $ string "["
+  ns <- many lName
+  string "->"
+  e  <- parseExp 
+  string "]"
+  return $ ELam ns e
+
+parseECase :: Parser Exp
+parseECase = do
+  try $ string "match"
+  e <- parseExp 
+  string "{"
+  vs <- many parseAlter
+  string "}"
+  return $ ECase e vs
+
+parseAlter :: Parser Alter
+parseAlter = do 
+  try $ string ">"
+  c  <- uName
+  vs <- many lName
+  string "->" 
+  e  <- parseExp
+  return $ (c, vs, e)
 
 -- TYPES
 
@@ -89,7 +152,7 @@ parsePrimInt = PInt <$> integer
 
 -- LEXER
 
-reserved = [ "data", "let" ]
+reserved = [ "data", "let", "match"]
 
 satisfy :: Parser a -> (a -> Bool) -> Parser a
 satisfy p f = do 
