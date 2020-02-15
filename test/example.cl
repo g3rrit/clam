@@ -18,6 +18,9 @@ let main : IO
 let foo : IO 
   = a := match a {
     > Cons a b -> foo a b c
-    > List -> 10
+    > List -> match b {
+        > G -> a := 0 ; b := 1; 10
+        > F a b b c -> [ a b -> f a b ] a b
+      }
   }
   ; a b c
