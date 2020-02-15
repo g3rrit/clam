@@ -13,3 +13,11 @@ let main : IO
   = print
   ; a := 10
   | b := [ a b -> 20 ]
+  ; c := 1
+
+let foo : IO 
+  = a := match a {
+    > Cons a b -> foo a b c
+    > List -> 10
+  }
+  ; a b c

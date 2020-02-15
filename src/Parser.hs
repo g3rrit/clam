@@ -7,6 +7,7 @@ import Text.Parsec ((<|>), (<?>), try, many, many1)
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Char as C
 import qualified Text.Parsec.Combinator as CB
+import qualified Text.Parsec.Expr as E
 
 type Parser = P.Parsec String ()
 
@@ -53,8 +54,9 @@ parseVariant = do
 
 -- EXPRESSION
 
+{-
 parseExp :: Parser Exp
-parseExp = (try parseESeqPar) <|> parseExpPrim <?> "expression"
+parseExp = (try parseESeqPar) <|> (try parseEAp) <|> parseExpPrim <?> "expression"
 
 parseExpPrim :: Parser Exp
 parseExpPrim = bracket "(" parseExp ")"
@@ -64,9 +66,29 @@ parseExpPrim = bracket "(" parseExp ")"
   <|> (try parseEPrim)
   <|> (try parseELet)
   <|> parseEVar
+-}
+
+parseExp :: Parser Exp
+parseExp = E.buildExpressionParser table parseExpPrim
+  <?> "expression"
+
+parseExpPrim :: Parser Exp
+parseExpPrim = bracket "(" parseExp ")"
+  <|> parseELam
+  <|> parseECase
+  <|> parseEConst
+  <|> parseEPrim
+  <|> parseELet
+  <|> parseEVar
+  <?> "simple expression"
+
+table = [ [ E.Infix (return EAp) E.AssocLeft ]
+        , [ E.Infix (EPar <$ (string "|")) E.AssocLeft ]
+        , [ E.Infix (ESeq <$ (string ";")) E.AssocLeft ]
+        ]
 
 parseEVar :: Parser Exp
-parseEVar = EVar <$> lName
+parseEVar = EVar <$> (try lName)
 
 parseEPrim :: Parser Exp
 parseEPrim = EPrim <$> parsePrim
@@ -74,23 +96,22 @@ parseEPrim = EPrim <$> parsePrim
 parsePrim :: Parser Prim
 parsePrim = PInt <$> integer
 
-parseESeqPar :: Parser Exp
-parseESeqPar = CB.chainl1 parseExpPrim ((EPar <$ (string "|")) <|> (ESeq <$ (string ";")))
+--parseESeqPar :: Parser Exp
+--parseESeqPar = CB.chainl1 parseExpPrim ((ESeq <$ (string ";")) <|> (EPar <$ (string "|")))
 
 parseELet :: Parser Exp
 parseELet = do
-  n  <- lName
-  string ":"
+  n  <- try $ lName <* (string ":")
   mt <- CB.optionMaybe parseType
   string "="
   e  <-parseExpPrim
   return $ ELet n mt e
 
 parseEConst :: Parser Exp
-parseEConst = EConst <$> uName
+parseEConst = EConst <$> (try uName)
 
-parseEAp :: Parser Exp
-parseEAp = CB.chainl1 parseExpPrim $ return EAp
+--parseEAp :: Parser Exp
+--parseEAp = CB.chainl1 parseExpPrim $ return EAp
 
 parseELam :: Parser Exp
 parseELam = do
@@ -168,12 +189,8 @@ lower = C.lower <* white1
 uName :: Parser String
 uName = name `satisfy` (\(x:_) -> isUpper x)
 
--- ((:) <$> C.upper <*> (many C.alphaNum)) <* white
-
 lName :: Parser String
 lName = name `satisfy` (\(x:_) -> isLower x)
-
---((:) <$> C.lower <*> (many C.alphaNum)) <* white
 
 name :: Parser String
 name = ((:) <$> C.letter <*> (many C.alphaNum)) `satisfy` (\n -> not $ elem n reserved) <* white
