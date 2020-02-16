@@ -29,7 +29,7 @@ parseComb = do
   n  <- lName
   vs <- many lName
   string ":"
-  t  <- parseType False
+  t  <- parseType
   string "="
   e  <- parseExp
   return $ Comb n vs t e
@@ -49,24 +49,10 @@ parseData = do
 parseVariant :: Parser Variant
 parseVariant = do
   n  <- uName
-  ts <- many (try $ parseType True)
+  ts <- many (try $ parseBType)
   return $ Variant n ts
 
 -- EXPRESSION
-
-{-
-parseExp :: Parser Exp
-parseExp = (try parseESeqPar) <|> (try parseEAp) <|> parseExpPrim <?> "expression"
-
-parseExpPrim :: Parser Exp
-parseExpPrim = bracket "(" parseExp ")"
-  <|> (try parseELam)
-  <|> (try parseECase)
-  <|> (try parseEConst)
-  <|> (try parseEPrim)
-  <|> (try parseELet)
-  <|> parseEVar
--}
 
 parseExp :: Parser Exp
 parseExp = E.buildExpressionParser table parseExpPrim
@@ -83,7 +69,6 @@ parseExpPrim = bracket "(" parseExp ")"
   <?> "simple expression"
 
 table = [ [ E.Infix (return EAp) E.AssocLeft ]
-        , [ E.Infix (EPar <$ (string "|")) E.AssocLeft ]
         , [ E.Infix (ESeq <$ (string ";")) E.AssocLeft ]
         ]
 
@@ -99,7 +84,7 @@ parsePrim = PInt <$> integer
 parseELet :: Parser Exp
 parseELet = do
   n  <- try $ lName <* (string ":")
-  mt <- CB.optionMaybe (parseType False)
+  mt <- CB.optionMaybe parseType
   string "="
   e  <-parseExpPrim
   return $ ELet n mt e
@@ -127,7 +112,7 @@ parseECase = do
 
 parseAlter :: Parser Alter
 parseAlter = do 
-  try $ string ">"
+  try $ string "|"
   c  <- uName
   vs <- many lName
   string "->" 
@@ -136,27 +121,24 @@ parseAlter = do
 
 -- TYPES
 
-parseType :: Bool -> Parser Type
-parseType p = (CB.chainr1 (parseTypePrim p) (TFn <$ (string "->"))) <?> "type"
-
-parseTypePrim :: Bool -> Parser Type
-parseTypePrim p = 
-  (if p then (try $ bracket "(" parseTKind ")") else try parseTKind)
-  <|> bracket "(" (parseType False) ")"
-  <|> (try parseTPrim)
-  <|> parseTGen
+parseType :: Parser Type
+parseType = E.buildExpressionParser 
+  [ [ E.Infix (return TKind) E.AssocLeft ]
+  , [ E.Infix (TFn <$ (string "->")) E.AssocRight ]
+  ] ((try parseTPrim) <|> (bracket "(" parseType ")") <|> parseTGen)
+  <?> "type"
 
 parseTPrim :: Parser Type
-parseTPrim = TKind <$> uName <*> return []
-
-parseTKind :: Parser Type
-parseTKind = do
-  n <- uName
-  xs <- many ((try parseTPrim) <|> (try $ parseType False))
-  return $ TKind n xs
+parseTPrim = TPrim <$> uName
 
 parseTGen :: Parser Type
 parseTGen = TGen <$> lName
+
+parseBType :: Parser Type
+parseBType = bracket "(" parseType ")"
+  <|> (try parseTPrim)
+  <|> parseTGen
+  <?> "btype"
 
 -- PRIMITIVE
 
@@ -205,6 +187,4 @@ white = P.skipMany (C.space <|> C.newline <|> C.crlf <|> C.tab)
 
 white1 :: Parser ()
 white1 = CB.skipMany1 (C.space <|> C.newline <|> C.crlf <|> C.tab) <|> P.eof
-
-
 

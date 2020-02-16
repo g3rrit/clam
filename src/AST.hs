@@ -24,8 +24,7 @@ type Alter
 data Exp 
   = EVar Name                  -- x
   | EPrim Prim                 -- 10
-  | EPar Exp Exp               -- exp ; exp
-  | ESeq Exp Exp               -- exp | exp
+  | ESeq Exp Exp               -- exp ; exp
   | ELet Name (Maybe Type) Exp -- Name : Type = Exp
   | EConst Name                -- True
   | EAp Exp Exp                -- exp exp
@@ -39,7 +38,8 @@ data Prim
 
 data Type 
   = TFn Type Type              -- Type -> Type
-  | TKind Name [Type]          -- Either Type Type
+  | TPrim Name                 -- Bool
+  | TKind Type Type            -- Either Type Type
   | TGen Name                  -- a
   deriving (Show)
 
