@@ -29,7 +29,7 @@ parseComb = do
   n  <- lName
   vs <- many lName
   string ":"
-  t  <- parseType
+  t  <- parseType False
   string "="
   e  <- parseExp
   return $ Comb n vs t e
@@ -49,7 +49,7 @@ parseData = do
 parseVariant :: Parser Variant
 parseVariant = do
   n  <- uName
-  ts <- many (try parseType)
+  ts <- many (try $ parseType True)
   return $ Variant n ts
 
 -- EXPRESSION
@@ -96,22 +96,16 @@ parseEPrim = EPrim <$> parsePrim
 parsePrim :: Parser Prim
 parsePrim = PInt <$> integer
 
---parseESeqPar :: Parser Exp
---parseESeqPar = CB.chainl1 parseExpPrim ((ESeq <$ (string ";")) <|> (EPar <$ (string "|")))
-
 parseELet :: Parser Exp
 parseELet = do
   n  <- try $ lName <* (string ":")
-  mt <- CB.optionMaybe parseType
+  mt <- CB.optionMaybe (parseType False)
   string "="
   e  <-parseExpPrim
   return $ ELet n mt e
 
 parseEConst :: Parser Exp
 parseEConst = EConst <$> (try uName)
-
---parseEAp :: Parser Exp
---parseEAp = CB.chainl1 parseExpPrim $ return EAp
 
 parseELam :: Parser Exp
 parseELam = do
@@ -142,17 +136,15 @@ parseAlter = do
 
 -- TYPES
 
-parseType :: Parser Type
-parseType = (try parseTFn) <|> parseTypePrim <?> "type"
+parseType :: Bool -> Parser Type
+parseType p = (CB.chainr1 (parseTypePrim p) (TFn <$ (string "->"))) <?> "type"
 
-parseTypePrim :: Parser Type
-parseTypePrim = (try $ bracket "(" parseTKind ")")
-  <|> bracket "(" parseType ")"
+parseTypePrim :: Bool -> Parser Type
+parseTypePrim p = 
+  (if p then (try $ bracket "(" parseTKind ")") else try parseTKind)
+  <|> bracket "(" (parseType False) ")"
   <|> (try parseTPrim)
   <|> parseTGen
-
-parseTFn :: Parser Type
-parseTFn = CB.chainr1 parseTypePrim (TFn <$ (string "->"))
 
 parseTPrim :: Parser Type
 parseTPrim = TKind <$> uName <*> return []
@@ -160,7 +152,7 @@ parseTPrim = TKind <$> uName <*> return []
 parseTKind :: Parser Type
 parseTKind = do
   n <- uName
-  xs <- many ((try parseTPrim) <|> (try parseType))
+  xs <- many ((try parseTPrim) <|> (try $ parseType False))
   return $ TKind n xs
 
 parseTGen :: Parser Type

@@ -11,15 +11,15 @@ data Data
   deriving (Show)
 
 data Variant 
-  = Variant Name [Type] -- List a (List a)
+  = Variant Name [Type]        -- List a (List a)
   deriving (Show)
 
 data Comb 
-  = Comb Name [Name] Type Exp -- let foo a b : Type = exp
+  = Comb Name [Name] Type Exp  -- let foo a b : Type = exp
   deriving (Show)
 
 type Alter 
-  = (Name, [Name], Exp) -- List x xs -> exp
+  = (Name, [Name], Exp)        -- List x xs -> exp
 
 data Exp 
   = EVar Name                  -- x
@@ -38,9 +38,8 @@ data Prim
   deriving (Show)
 
 data Type 
-  = TFn Type Type     -- Type -> Type
-  | TKind Name [Type] -- Either Type Type
-  | TGen Name         -- a
-  | TUndef
+  = TFn Type Type              -- Type -> Type
+  | TKind Name [Type]          -- Either Type Type
+  | TGen Name                  -- a
   deriving (Show)
 

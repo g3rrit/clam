@@ -42,14 +42,14 @@ instance Pretty Exp where
   pp = \case 
     EVar n -> text n
     EPrim p -> pp p
-    EPar e0 e1 -> (pp e0) $$ (text "|") <+> (pp e1)
-    ESeq e0 e1 -> (pp e0) $$ (text ";") <+> (pp e1)
+    EPar e0 e1 -> lparen <+> (pp e0) $$ (text "|") <+> (pp e1) <+> rparen
+    ESeq e0 e1 -> lparen <+> (pp e0) $$ (text ";") <+> (pp e1) <+> rparen
     ELet n mt e -> (text n) <+> colon <+> (maybe empty pp mt) <+> equals <+> (pp e)
     EConst n -> text n 
     EAp e0 e1 -> lparen <> (pp e0) <+> (pp e1) <> rparen
     ELam ns e -> lbrack <+> (hsep $ map text ns) <+> (text "->") <+> (pp e) <+> rbrack
-    ECase e as -> (text "match") <+> (pp e)
-      $$ (vcat $ map pp as)
+    ECase e as -> (text "match") <+> (pp e) <+> lbrace 
+      $$ vcat [(nest 2 $ vcat $ map pp as), rbrace]
 
 instance Pretty Prim where
   pp (PInt i) = int i
@@ -57,5 +57,5 @@ instance Pretty Prim where
 instance Pretty Type where
   pp = \case 
     TFn t0 t1 -> lparen <> (pp t0) <+> (text "->") <+> (pp t1) <> rparen
-    TKind n ts -> (text n) <+> (hsep $ map pp ts)
+    TKind n ts -> (text n) <+> lbrack <+> (hsep $ map pp ts) <+> rbrack
     TGen n -> text n
