@@ -29,6 +29,7 @@ data Exp
   | EConst Name                -- True
   | EAp Exp Exp                -- exp exp
   | ELam [Name] Exp            -- [ a b -> exp ]
+  | EIf Exp Exp Exp            -- if a then b else c | if a then b con
   | ECase Exp [Alter]          -- match a { > alter > alter }
   deriving (Show)
 

@@ -45,6 +45,7 @@ instance Pretty Exp where
     ESeq e0 e1 -> lparen <+> (pp e0) $$ (text ";") <+> (pp e1) <+> rparen
     ELet n mt e -> (text n) <+> colon <+> (maybe (text "undef") pp mt) <+> equals <+> (pp e)
     EConst n -> text n 
+    EIf c t e -> (text "if") <+> (pp c) $$ (text "then") <+> (pp t) $$ (text "else") <+> (pp e)
     EAp e0 e1 -> lparen <> (pp e0) <+> (pp e1) <> rparen
     ELam ns e -> lbrack <+> (hsep $ map text ns) <+> (text "->") <+> (pp e) <+> rbrack
     ECase e as -> (text "match") <+> (pp e) <+> lbrace 

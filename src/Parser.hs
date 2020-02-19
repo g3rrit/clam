@@ -62,6 +62,8 @@ parseExpPrim :: Parser Exp
 parseExpPrim = bracket "(" parseExp ")"
   <|> parseELam
   <|> parseECase
+  <|> parseEIf
+  <|> ((string ">>") *> (string ";") *> parseExp)
   <|> parseEConst
   <|> parseEPrim
   <|> parseELet
@@ -70,6 +72,7 @@ parseExpPrim = bracket "(" parseExp ")"
 
 table = [ [ E.Infix (return EAp) E.AssocLeft ]
         , [ E.Infix (ESeq <$ (string ";")) E.AssocLeft ]
+--        , [ E.Infix (EAp <$ (string "$")) E.AssocLeft ]
         ]
 
 parseEVar :: Parser Exp
@@ -110,6 +113,16 @@ parseECase = do
   string "}"
   return $ ECase e vs
 
+parseEIf :: Parser Exp
+parseEIf = do
+  try $ string "if"
+  c <- parseExp
+  string "then"
+  t <- parseExp
+  string "else"
+  e <- parseExpPrim
+  return $ EIf c t e
+
 parseAlter :: Parser Alter
 parseAlter = do 
   try $ string "|"
@@ -147,7 +160,7 @@ parsePrimInt = PInt <$> integer
 
 -- LEXER
 
-reserved = [ "data", "let", "match"]
+reserved = [ "data", "let", "match", "if", "then", "else"]
 
 satisfy :: Parser a -> (a -> Bool) -> Parser a
 satisfy p f = do 
@@ -182,9 +195,13 @@ integer :: Parser Int
 integer = (rd <$> many1 C.digit) <* white
   where rd = read :: String -> Int
 
+comment :: Parser ()
+comment = (try $ string "--") >> skip >> return ()
+  where skip = C.newline <|> (C.anyChar  >> skip)
+
 white :: Parser ()
-white = P.skipMany (C.space <|> C.newline <|> C.crlf <|> C.tab)
+white = P.skipMany (comment <|> (C.space <|> C.newline <|> C.crlf <|> C.tab) *> return ())
 
 white1 :: Parser ()
-white1 = CB.skipMany1 (C.space <|> C.newline <|> C.crlf <|> C.tab) <|> P.eof
+white1 = CB.skipMany1 (comment <|> (C.space <|> C.newline <|> C.crlf <|> C.tab) *> return ()) <|> P.eof
 

@@ -26,3 +26,18 @@ let foo : IO
       }
   }
   ; a b c
+
+let bar : IO
+  = a := 10
+  ; b := if (if a then b else c) then 10 else f
+  ; 10 
+  ; b := 20
+  ; c := if a then b else >>
+  ; d := 4
+  ; match a { | D -> f }
+
+
+-- let foo : IO
+--   = a := a b $ c d $ e f g
+--   ; if a $ b c then b c $ d e else (f $ g h)
+--  ; 10
