@@ -48,8 +48,7 @@ instance Pretty Exp where
     EIf c t e -> (text "if") <+> (pp c) $$ (text "then") <+> (pp t) $$ (text "else") <+> (pp e)
     EAp e0 e1 -> lparen <> (pp e0) <+> (pp e1) <> rparen
     ELam ns e -> lbrack <+> (hsep $ map text ns) <+> (text "->") <+> (pp e) <+> rbrack
-    ECase e as -> (text "match") <+> (pp e) <+> lbrace 
-      $$ vcat [(nest 2 $ vcat $ map pp as), rbrace]
+    ECase e as -> (text "match") <+> (pp e) $$ (nest 2 $ vcat $ map pp as)
 
 instance Pretty Prim where
   pp (PInt i) = int i

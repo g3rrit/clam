@@ -62,18 +62,34 @@ parseExpPrim :: Parser Exp
 parseExpPrim = bracket "(" parseExp ")"
   <|> parseELam
   <|> parseECase
-  <|> parseEIf
   <|> ((string ">>") *> (string ";") *> parseExp)
   <|> parseEConst
   <|> parseEPrim
-  <|> parseELet
   <|> parseEVar
   <?> "simple expression"
 
 table = [ [ E.Infix (return EAp) E.AssocLeft ]
-        , [ E.Infix (ESeq <$ (string ";")) E.AssocLeft ]
---        , [ E.Infix (EAp <$ (string "$")) E.AssocLeft ]
+        , [ E.Infix (EAp <$ (try $ string "$")) E.AssocLeft ]
+        , [ E.Prefix parseEIfPrefix ]
+        , [ E.Prefix parseELetPrefix ]
+        , [ E.Infix (ESeq <$ (try $ string ";")) E.AssocLeft ]
         ]
+
+parseELetPrefix :: Parser (Exp -> Exp)
+parseELetPrefix = do
+  n  <- try $ lName <* (string ":")
+  mt <- CB.optionMaybe parseType
+  string "="
+  return $ \ e -> ELet n mt e
+  
+parseEIfPrefix :: Parser (Exp -> Exp)
+parseEIfPrefix = do
+  try $ string "if"
+  c <- parseExp
+  string "then"
+  t <- parseExp
+  string "else"
+  return $ \e -> EIf c t e
 
 parseEVar :: Parser Exp
 parseEVar = EVar <$> (try lName)
@@ -83,14 +99,6 @@ parseEPrim = EPrim <$> parsePrim
 
 parsePrim :: Parser Prim
 parsePrim = PInt <$> integer
-
-parseELet :: Parser Exp
-parseELet = do
-  n  <- try $ lName <* (string ":")
-  mt <- CB.optionMaybe parseType
-  string "="
-  e  <-parseExpPrim
-  return $ ELet n mt e
 
 parseEConst :: Parser Exp
 parseEConst = EConst <$> (try uName)
@@ -108,20 +116,9 @@ parseECase :: Parser Exp
 parseECase = do
   try $ string "match"
   e <- parseExp 
-  string "{"
   vs <- many parseAlter
-  string "}"
+  string "end"
   return $ ECase e vs
-
-parseEIf :: Parser Exp
-parseEIf = do
-  try $ string "if"
-  c <- parseExp
-  string "then"
-  t <- parseExp
-  string "else"
-  e <- parseExpPrim
-  return $ EIf c t e
 
 parseAlter :: Parser Alter
 parseAlter = do 
@@ -160,7 +157,7 @@ parsePrimInt = PInt <$> integer
 
 -- LEXER
 
-reserved = [ "data", "let", "match", "if", "then", "else"]
+reserved = [ "data", "let", "match", "end", "if", "then", "else"]
 
 satisfy :: Parser a -> (a -> Bool) -> Parser a
 satisfy p f = do 
@@ -196,8 +193,8 @@ integer = (rd <$> many1 C.digit) <* white
   where rd = read :: String -> Int
 
 comment :: Parser ()
-comment = (try $ string "--") >> skip >> return ()
-  where skip = C.newline <|> (C.anyChar  >> skip)
+comment = (try $ string "/*") >> skip >> return ()
+  where skip = (string "*/") <|> (C.anyChar  >> skip)
 
 white :: Parser ()
 white = P.skipMany (comment <|> (C.space <|> C.newline <|> C.crlf <|> C.tab) *> return ())

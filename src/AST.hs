@@ -30,7 +30,7 @@ data Exp
   | EAp Exp Exp                -- exp exp
   | ELam [Name] Exp            -- [ a b -> exp ]
   | EIf Exp Exp Exp            -- if a then b else c | if a then b con
-  | ECase Exp [Alter]          -- match a { > alter > alter }
+  | ECase Exp [Alter]          -- match a | alter | alter end
   deriving (Show)
 
 data Prim 
