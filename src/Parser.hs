@@ -54,9 +54,13 @@ parseVariant = do
 
 -- EXPRESSION
 
+parseUExp :: Parser Exp
+parseUExp = E.buildExpressionParser table parseExpPrim
+  <?> "unit expression"
+
 parseExp :: Parser Exp
-parseExp = E.buildExpressionParser table parseExpPrim
-  <?> "expression"
+parseExp = CB.chainl1 parseUExp (ESeq <$ (string ";"))
+  <?> "sequential expression"
 
 parseExpPrim :: Parser Exp
 parseExpPrim = bracket "(" parseExp ")"
@@ -72,7 +76,7 @@ table = [ [ E.Infix (return EAp) E.AssocLeft ]
         , [ E.Infix (EAp <$ (try $ string "$")) E.AssocLeft ]
         , [ E.Prefix parseEIfPrefix ]
         , [ E.Prefix parseELetPrefix ]
-        , [ E.Infix (ESeq <$ (try $ string ";")) E.AssocLeft ]
+        --, [ E.Infix (ESeq <$ (try $ string ";")) E.AssocLeft ]
         ]
 
 parseELetPrefix :: Parser (Exp -> Exp)
@@ -117,7 +121,6 @@ parseECase = do
   try $ string "match"
   e <- parseExp 
   vs <- many parseAlter
-  string "end"
   return $ ECase e vs
 
 parseAlter :: Parser Alter
@@ -126,7 +129,7 @@ parseAlter = do
   c  <- uName
   vs <- many lName
   string "->" 
-  e  <- parseExp
+  e  <- parseUExp
   return $ (c, vs, e)
 
 -- TYPES

@@ -21,22 +21,18 @@ let foo : IO
   = match a 
       | A -> f a
       | B -> b
-  end
 
 let foo : IO 
   = a := match a 
     | Cons a b -> foo a b c
     | Bla a b -> a b $ c d
-    | List -> match b 
+    | List -> (match b 
         | G -> (a := 0 ; b := 1; 10)
-        | F a b b c -> [ a b -> f a b ] a b
-    end
-    | List -> match b 
+        | F a b b c -> [ a b -> f a b ] a b)
+    | List -> (match b 
         | G -> (a := 0 ; b := 1; 10)
-        | F a b b c -> [ a b -> f a b ] a b
-    end
+        | F a b b c -> [ a b -> f a b ] a b)
   ; a b c
-  end
 
 let bar : IO
   = a := 10
@@ -46,7 +42,10 @@ let bar : IO
   ; b := 20
   ; c := if a then b else >>
   ; d := a b c
-  ; match a | D -> f end
+  ; match a | D -> f
+  ; match a | D -> g | E -> >>
+  ; a := 10
+  ; print
 
 
 let foo : IO
