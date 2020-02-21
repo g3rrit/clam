@@ -1,8 +1,8 @@
 module Main where
 
 import Text.PrettyPrint
-import Parser
-import Pretty
+import Parser.Parser
+import Parser.Pretty
 
 version = "0.0.0"
 

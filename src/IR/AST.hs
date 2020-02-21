@@ -1,10 +1,16 @@
-module AST where
+module IR.AST where
+
+import qualified Parser.AST as P
+import qualified Data.Map.Lazy as M
 
 type Name 
+  = (Integer, Integer, Integer) -- (module, comb/data, id)
+
+type Id 
   = String
 
-type Toplevel 
-  = [Either Comb Data]
+data Module 
+  = Module 
 
 data Data
   = Data Name [Name] [Variant] -- data List a = Var | Var
@@ -43,4 +49,5 @@ data Type
   | TKind Type Type            -- Either Type Type
   | TGen Name                  -- a
   deriving (Show)
+
 

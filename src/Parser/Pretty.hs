@@ -3,12 +3,12 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Pretty where
+module Parser.Pretty where
 
 import Prelude hiding ((<>))
 import Text.PrettyPrint
 import Data.List (intersperse)
-import AST 
+import Parser.AST 
 
 class Pretty t where 
   pp :: t -> Doc
@@ -16,10 +16,11 @@ class Pretty t where
 pretty :: Pretty t => t -> Doc
 pretty t = pp t
 
-instance Pretty Toplevel where
-  pp ts = vcat $ map (\case
-    Left c  -> pp c
-    Right d -> pp d) ts
+instance Pretty Module where
+  pp (Module m ts) = (text "Module") <+> (text m) $$
+    (vcat $ map (\case
+      Left c  -> pp c
+      Right d -> pp d) ts)
 
 instance Pretty Data where
   pp (Data n ns vs) = 

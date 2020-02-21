@@ -1,6 +1,6 @@
-module Parser where
+module Parser.Parser where
 
-import AST
+import Parser.AST
 
 import Data.Char
 import Text.Parsec ((<|>), (<?>), try, many, many1)
@@ -11,15 +11,20 @@ import qualified Text.Parsec.Expr as E
 
 type Parser = P.Parsec String ()
 
-parse :: String -> String -> Either String Toplevel
+parse :: String -> String -> Either String Module
 parse file input = 
-  case P.runParser toplevel () file input of
+  case P.runParser parseModule () file input of
     Left err -> Left $ show err
     Right tl -> Right tl
     
 
-toplevel :: Parser Toplevel
-toplevel = white *> (many $ (Left <$> parseComb) <|> (Right <$> parseData)) <* P.eof
+parseModule :: Parser Module
+parseModule = do
+  white
+  string "mod"
+  m  <- uName
+  dc <- (many $ (Left <$> parseComb) <|> (Right <$> parseData)) <* P.eof
+  return $ Module m dc
 
 -- COMB
 

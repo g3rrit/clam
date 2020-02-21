@@ -1,3 +1,4 @@
+mod Main
 
 data Bool = True | False
 
