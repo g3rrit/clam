@@ -19,7 +19,7 @@ let main : IO a
   ; c := 1
 
 let foo : IO
-  = match a 
+  = match a let
       | A -> f a
       | B -> b
 

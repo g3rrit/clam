@@ -2,21 +2,27 @@ module Parser.Parser where
 
 import Parser.AST
 
+import Error.Print
 import Data.Char
 import Text.Parsec ((<|>), (<?>), try, many, many1)
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Char as C
 import qualified Text.Parsec.Combinator as CB
 import qualified Text.Parsec.Expr as E
+import qualified Text.Parsec.Error as ER
 
 type Parser = P.Parsec String ()
 
-parse :: String -> String -> Either String Module
+parse :: String -> String -> Either (SourcePos, String) Module
 parse file input = 
   case P.runParser parseModule () file input of
-    Left err -> Left $ show err
+    Left err -> Left $ let epos = P.errorPos err 
+                       in ( (P.sourceLine epos, P.sourceColumn epos)
+                          , showErrorMessages $ ER.errorMessages err)
     Right tl -> Right tl
     
+showErrorMessages ms = 
+  ER.showErrorMessages "or" "unknown" "expecting" "unexpected" "end of input" ms
 
 parseModule :: Parser Module
 parseModule = do

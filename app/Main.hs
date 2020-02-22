@@ -1,5 +1,6 @@
 module Main where
 
+import Error.Print
 import Text.PrettyPrint
 import Parser.Parser
 import Parser.Pretty
@@ -12,6 +13,6 @@ main = do
   file <- readFile "test/example.cl"
   print file
   let r = parse "TEST" file
-  putStrLn $ case r of
-    Left e -> e
-    Right ast -> render $ pretty ast
+  case r of
+    Left (p, e) -> printError "test/example.cl" p ParserError e
+    Right ast -> putStrLn $ render $ pretty ast
