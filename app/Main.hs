@@ -14,5 +14,5 @@ main = do
   print file
   let r = parse "TEST" file
   case r of
-    Left (p, e) -> printError "test/example.cl" p ParserError e
+    Left (PError p e) -> printError "test/example.cl" p ParserError e
     Right ast -> putStrLn $ render $ pretty ast

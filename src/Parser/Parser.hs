@@ -13,12 +13,16 @@ import qualified Text.Parsec.Error as ER
 
 type Parser = P.Parsec String ()
 
-parse :: String -> String -> Either (SourcePos, String) Module
+data PError = PError Loc String
+
+parse :: String -> String -> Either PError Module
 parse file input = 
   case P.runParser parseModule () file input of
     Left err -> Left $ let epos = P.errorPos err 
-                       in ( (P.sourceLine epos, P.sourceColumn epos)
-                          , showErrorMessages $ ER.errorMessages err)
+                           spos = (P.sourceLine epos, P.sourceColumn epos)
+                           sloc = Loc spos spos
+                       in PError sloc 
+                            $ showErrorMessages $ ER.errorMessages err
     Right tl -> Right tl
     
 showErrorMessages ms = 
@@ -29,12 +33,29 @@ parseModule = do
   white
   string "mod"
   m  <- uName
-  dc <- (many $ (Left <$> parseComb) <|> (Right <$> parseData)) <* P.eof
+  dc <- (many $ (Left <$> (tagLoc parseComb)) 
+          <|> (Right <$> (tagLoc parseData))) 
+          <* P.eof
   return $ Module m dc
+
+-- UTIL
+
+getLoc :: Parser Loc
+getLoc = do
+  p <- P.getPosition
+  let sp = (P.sourceLine p, P.sourceColumn p)
+  return $ Loc sp sp
+
+tagLoc :: Parser (Loc -> a) -> Parser a
+tagLoc p = do
+  l0 <- getLoc
+  r  <- p
+  l1 <- getLoc
+  return $ r (l0 <> l1)
 
 -- COMB
 
-parseComb :: Parser Comb
+parseComb :: Parser (Loc -> Comb)
 parseComb = do
   try $ string "let"
   n  <- lName
@@ -47,7 +68,7 @@ parseComb = do
 
 -- DATA
 
-parseData :: Parser Data
+parseData :: Parser (Loc -> Data)
 parseData = do
   try $ string "data"
   n  <- uName
@@ -147,9 +168,12 @@ parseAlter = do
 
 parseType :: Parser Type
 parseType = E.buildExpressionParser 
-  [ [ E.Infix (return TKind) E.AssocLeft ]
+  [ [ E.Prefix (TRef <$ (string "&")) ]
+  , [ E.Prefix (TSptr <$ (string "*")) ]
+  , [ E.Prefix (TUptr <$ (string "^")) ]
+  , [ E.Infix (return TKind) E.AssocLeft ]
   , [ E.Infix (TFn <$ (string "->")) E.AssocRight ]
-  ] ((try parseTPrim) <|> (bracket "(" parseType ")") <|> parseTGen)
+  ] parseTType
   <?> "type"
 
 parseTPrim :: Parser Type
@@ -158,11 +182,27 @@ parseTPrim = TPrim <$> uName
 parseTGen :: Parser Type
 parseTGen = TGen <$> lName
 
-parseBType :: Parser Type
-parseBType = bracket "(" parseType ")"
+parseTRef :: Parser Type
+parseTRef = (try $ string "&") *> (TRef <$> parseType)
+
+parseTSptr :: Parser Type
+parseTSptr = (try $ string "*") *> (TRef <$> parseType)
+
+parseTUptr :: Parser Type
+parseTUptr = (try $ string "^") *> (TRef <$> parseType)
+
+parseBType = E.buildExpressionParser
+  [ [ E.Prefix (TRef <$ (string "&")) ]
+  , [ E.Prefix (TSptr <$ (string "*")) ]
+  , [ E.Prefix (TUptr <$ (string "^")) ]
+  ] parseTType
+  <?> "btype"
+
+parseTType :: Parser Type
+parseTType = bracket "(" parseType ")"
   <|> (try parseTPrim)
   <|> parseTGen
-  <?> "btype"
+  <?> "ttype"
 
 -- PRIMITIVE
 

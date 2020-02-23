@@ -1,5 +1,7 @@
 module Parser.AST where
 
+import Error.Print
+
 type Name 
   = String
 
@@ -7,7 +9,7 @@ data Module
   = Module String [Either Comb Data]
 
 data Data
-  = Data Name [Name] [Variant] -- data List a = Var | Var
+  = Data Name [Name] [Variant] Loc -- data List a = Var | Var
   deriving (Show)
 
 data Variant 
@@ -15,7 +17,7 @@ data Variant
   deriving (Show)
 
 data Comb 
-  = Comb Name [Name] Type Exp  -- let foo a b : Type = exp
+  = Comb Name [Name] Type Exp Loc  -- let foo a b : Type = exp
   deriving (Show)
 
 type Alter 
@@ -42,5 +44,8 @@ data Type
   | TPrim Name                 -- Bool
   | TKind Type Type            -- Either Type Type
   | TGen Name                  -- a
+  | TRef Type                  -- &Type
+  | TUptr Type                 -- ^Type
+  | TSptr Type                 -- *Type
   deriving (Show)
 

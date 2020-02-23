@@ -2,7 +2,7 @@ mod Main
 
 data Bool = True | False
 
-data Pair b = Pair Int b
+data Pair b = Pair *Int b
 
 data Arrow a b = Arrow (a -> b -> c)
 
@@ -19,7 +19,7 @@ let main : IO a
   ; c := 1
 
 let foo : IO
-  = match a let
+  = match a 
       | A -> f a
       | B -> b
 

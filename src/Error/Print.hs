@@ -1,32 +1,38 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Error.Print where
 
 import qualified Text.Parsec.Pos as P
 import System.IO
+import Control.Monad
 
-type SourcePos = (Int, Int)
+type Pos = (Int, Int)
+
+data Loc = Loc Pos Pos
+  deriving (Show)
+
+instance Semigroup Loc where
+  (Loc s0 e0) <> (Loc s1 e1) = Loc s0 e1
 
 data ErrorType 
   = ParserError
 
-pen = 10
-aen = 20
-
-printError :: String -> SourcePos -> ErrorType -> String -> IO ()
-printError src (l, c) t msg = do
+printError :: String -> Loc -> ErrorType -> String -> IO ()
+printError src (Loc (l0, c0) (l1, c1)) t msg = do
   h <- openFile src ReadMode
-  line <- seekLine (l - 1) h
-  if c >= length line then compilerError "invalid column in file" else return ()
-
-  -- let chunk = take aen $ drop (max (c - pen) 0) line
+  lines <- seekLines (l0 - 1) (l1 - 1) h
 
   putStrLn $ "_______________________________________"
   case t of
     ParserError -> putStr "ParserError"
 
-  putStrLn $ " at (line " ++ (show l) ++ ", column " ++ (show c) ++ ")"
+  putStrLn $ " at (line " ++ (show l0) ++ ", column " ++ (show c0) ++ ")"
   putStrLn $ "---------------------------------------"
-  putStrLn $ "..." ++ line ++ "..."
-  putStrLn $ (replicate (c + 2) ' ') ++ "^"
+  putStrLn $ (replicate (c0 + (length (show l0)) + 2) ' ') ++ "*"
+  forM (zip lines [l0..])
+    $ \(line, l) -> putStrLn $ (show l) ++ " | " ++ line
+  putStrLn $ (replicate (c1 + (length (show l1)) + 2) ' ') ++ "*"
   putStrLn $ msg
   putStrLn $ "---------------------------------------"
    
@@ -37,7 +43,9 @@ compilerError :: String -> IO ()
 compilerError s =
   error $ "COMPILER ERROR| " ++ s
 
-seekLine :: Int -> Handle -> IO String
-seekLine 0 h = hGetLine h
-seekLine n h = hGetLine h >> seekLine (n - 1) h -- handle IO Error here
-  
+seekLines :: Int -> Int -> Handle -> IO [String]
+seekLines s e h = seekLines' s e h []
+  where seekLines' 0 0 h r = hGetLine h >>= \a -> return $ a : r
+        seekLines' 0 e h r = hGetLine h >>= \a -> seekLines' 0 (e - 1) h (a:r)
+        seekLines' s e h r = hGetLine h >> seekLines' (s - 1) (e - 1) h r
+
