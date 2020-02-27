@@ -106,41 +106,41 @@ parseExpPrim = bracket "(" parseExp ")"
 
 table = [ [ E.Infix (return EAp) E.AssocLeft ]
         , [ E.Infix (EAp <$ (try $ string "$")) E.AssocLeft ]
-        , [ E.Prefix parseEIfPrefix ]
-        , [ E.Prefix parseELetPrefix ]
+        , [ E.Prefix (tagLoc parseEIfPrefix) ]
+        , [ E.Prefix (tagLoc parseELetPrefix) ]
         --, [ E.Infix (ESeq <$ (try $ string ";")) E.AssocLeft ]
         ]
 
-parseELetPrefix :: Parser (Exp -> Exp)
+parseELetPrefix :: Parser (Loc -> Exp -> Exp)
 parseELetPrefix = do
   n  <- try $ lName <* (string ":")
   mt <- CB.optionMaybe parseType
   string "="
-  return $ \ e -> ELet n mt e
+  return $ \l e -> ELet n mt e l
   
-parseEIfPrefix :: Parser (Exp -> Exp)
+parseEIfPrefix :: Parser (Loc -> Exp -> Exp)
 parseEIfPrefix = do
   try $ string "if"
   c <- parseExp
   string "then"
   t <- parseExp
   string "else"
-  return $ \e -> EIf c t e
+  return $ \l e -> EIf c t e l
 
 parseEVar :: Parser Exp
-parseEVar = EVar <$> (try lName)
+parseEVar = tagLoc $ EVar <$> (try lName)
 
 parseEPrim :: Parser Exp
-parseEPrim = EPrim <$> parsePrim
+parseEPrim = tagLoc $ EPrim <$> parsePrim
 
 parsePrim :: Parser Prim
 parsePrim = PInt <$> integer
 
 parseEConst :: Parser Exp
-parseEConst = EConst <$> (try uName)
+parseEConst = tagLoc $ EConst <$> (try uName)
 
 parseELam :: Parser Exp
-parseELam = do
+parseELam = tagLoc $ do
   try $ string "["
   ns <- many lName
   string "->"
@@ -149,20 +149,20 @@ parseELam = do
   return $ ELam ns e
 
 parseECase :: Parser Exp
-parseECase = do
+parseECase = tagLoc $ do
   try $ string "match"
   e <- parseExp 
   vs <- many parseAlter
   return $ ECase e vs
 
 parseAlter :: Parser Alter
-parseAlter = do 
+parseAlter = tagLoc $ do 
   try $ string "|"
   c  <- uName
   vs <- many lName
   string "->" 
   e  <- parseUExp
-  return $ (c, vs, e)
+  return $ Alter c vs e
 
 -- TYPES
 
@@ -177,19 +177,10 @@ parseType = E.buildExpressionParser
   <?> "type"
 
 parseTPrim :: Parser Type
-parseTPrim = TPrim <$> uName
+parseTPrim = tagLoc $ TPrim <$> uName
 
 parseTGen :: Parser Type
-parseTGen = TGen <$> lName
-
-parseTRef :: Parser Type
-parseTRef = (try $ string "&") *> (TRef <$> parseType)
-
-parseTSptr :: Parser Type
-parseTSptr = (try $ string "*") *> (TRef <$> parseType)
-
-parseTUptr :: Parser Type
-parseTUptr = (try $ string "^") *> (TRef <$> parseType)
+parseTGen = tagLoc $ TGen <$> lName
 
 parseBType = E.buildExpressionParser
   [ [ E.Prefix (TRef <$ (string "&")) ]
@@ -200,7 +191,7 @@ parseBType = E.buildExpressionParser
 
 parseTType :: Parser Type
 parseTType = bracket "(" parseType ")"
-  <|> (try parseTPrim)
+  <|> (try $ parseTPrim)
   <|> parseTGen
   <?> "ttype"
 

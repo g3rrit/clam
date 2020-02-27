@@ -20,19 +20,20 @@ data Comb
   = Comb Name [Name] Type Exp Loc  -- let foo a b : Type = exp
   deriving (Show)
 
-type Alter 
-  = (Name, [Name], Exp)        -- List x xs -> exp
+data Alter 
+  = Alter Name [Name] Exp Loc        -- List x xs -> exp
+  deriving (Show)
 
 data Exp 
-  = EVar Name                  -- x
-  | EPrim Prim                 -- 10
+  = EVar Name Loc              -- x
+  | EPrim Prim Loc             -- 10
+  | EConst Name Loc               -- True
+  | ELam [Name] Exp Loc           -- [ a b -> exp ]
+  | EIf Exp Exp Exp Loc           -- if a then b else c | if a then b con
+  | ECase Exp [Alter] Loc          -- match a | alter | alter end
+  | ELet Name (Maybe Type) Exp Loc -- Name : Type = Exp
   | ESeq Exp Exp               -- exp ; exp
-  | ELet Name (Maybe Type) Exp -- Name : Type = Exp
-  | EConst Name                -- True
   | EAp Exp Exp                -- exp exp
-  | ELam [Name] Exp            -- [ a b -> exp ]
-  | EIf Exp Exp Exp            -- if a then b else c | if a then b con
-  | ECase Exp [Alter]          -- match a | alter | alter end
   deriving (Show)
 
 data Prim 
@@ -41,9 +42,9 @@ data Prim
 
 data Type 
   = TFn Type Type              -- Type -> Type
-  | TPrim Name                 -- Bool
+  | TPrim Name Loc                -- Bool
   | TKind Type Type            -- Either Type Type
-  | TGen Name                  -- a
+  | TGen Name Loc                 -- a
   | TRef Type                  -- &Type
   | TUptr Type                 -- ^Type
   | TSptr Type                 -- *Type

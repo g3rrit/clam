@@ -9,8 +9,15 @@ type Name
 type Id 
   = String
 
+type Namespace 
+  = M.Map Id Name
+
 data Module 
   = Module 
+  { mns   :: Namespace 
+  , mdata :: M.Map Id Data
+  , mcomb :: M.Map Id Comb
+  } 
 
 data Data
   = Data Name [Name] [Variant] -- data List a = Var | Var

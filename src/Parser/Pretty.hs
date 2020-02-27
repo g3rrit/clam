@@ -36,20 +36,20 @@ instance Pretty Variant where
   pp (Variant n t) = (text n) <+> (hsep $ map pp t)
 
 instance Pretty Alter where
-  pp (n, ns, e) = (text "|") <+> (text n) <+> (hsep $ map text ns) <+> (text "->")
+  pp (Alter n ns e _) = (text "|") <+> (text n) <+> (hsep $ map text ns) <+> (text "->")
     <+> (pp e)
 
 instance Pretty Exp where
   pp = \case 
-    EVar n -> text n
-    EPrim p -> pp p
-    ESeq e0 e1 -> lparen <+> (pp e0) $$ (text ";") <+> (pp e1) <+> rparen
-    ELet n mt e -> (text n) <+> colon <+> (maybe (text "undef") pp mt) <+> equals <+> (pp e)
-    EConst n -> text n 
-    EIf c t e -> (text "if") <+> (pp c) $$ (text "then") <+> (pp t) $$ (text "else") <+> (pp e)
+    EVar n _ -> text n
+    EPrim p _ -> pp p
+    EConst n _ -> text n 
+    ELet n mt e _ -> (text n) <+> colon <+> (maybe (text "undef") pp mt) <+> equals <+> (pp e)
+    EIf c t e _ -> (text "if") <+> (pp c) $$ (text "then") <+> (pp t) $$ (text "else") <+> (pp e)
+    ELam ns e _ -> lbrack <+> (hsep $ map text ns) <+> (text "->") <+> (pp e) <+> rbrack
+    ECase e as _ -> (text "match") <+> (pp e) $$ (nest 2 $ vcat $ map pp as)
     EAp e0 e1 -> lparen <> (pp e0) <+> (pp e1) <> rparen
-    ELam ns e -> lbrack <+> (hsep $ map text ns) <+> (text "->") <+> (pp e) <+> rbrack
-    ECase e as -> (text "match") <+> (pp e) $$ (nest 2 $ vcat $ map pp as)
+    ESeq e0 e1 -> lparen <+> (pp e0) $$ (text ";") <+> (pp e1) <+> rparen
 
 instance Pretty Prim where
   pp (PInt i) = int i
@@ -57,9 +57,9 @@ instance Pretty Prim where
 instance Pretty Type where
   pp = \case 
     TFn t0 t1 -> lparen <> (pp t0) <+> (text "->") <+> (pp t1) <> rparen
-    TPrim n -> text n
+    TPrim n _ -> text n
     TKind t0 t1 -> lparen <+> pp t0 <+> pp t1 <+> rparen
-    TGen n -> text n
+    TGen n _ -> text n
     TRef t -> lparen <+> (text "&") <+> pp t <+> rparen
     TSptr t -> lparen <+> (text "*") <+> pp t <+> rparen
     TUptr t -> lparen <+> (text "^") <+> pp t <+> rparen

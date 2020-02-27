@@ -12,14 +12,21 @@ type Pos = (Int, Int)
 data Loc = Loc Pos Pos
   deriving (Show)
 
+class Locate a where
+  loc :: a -> Loc
+
+instance Locate Loc where
+  loc = id
+
 instance Semigroup Loc where
   (Loc s0 e0) <> (Loc s1 e1) = Loc s0 e1
 
 data ErrorType 
   = ParserError
 
-printError :: String -> Loc -> ErrorType -> String -> IO ()
-printError src (Loc (l0, c0) (l1, c1)) t msg = do
+printError :: Locate l => String -> l -> ErrorType -> String -> IO ()
+printError src l t msg = do
+  let (Loc (l0, c0) (l1, c1)) = loc l
   h <- openFile src ReadMode
   lines <- seekLines (l0 - 1) (l1 - 1) h
 
