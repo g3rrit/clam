@@ -33,7 +33,7 @@ instance Pretty Comb where
       $$ (nest 2 $ equals <+> (pp e))
 
 instance Pretty Variant where
-  pp (Variant n t) = (text n) <+> (hsep $ map pp t)
+  pp (Variant n t _) = (text n) <+> (hsep $ map pp t)
 
 instance Pretty Alter where
   pp (Alter n ns e _) = (text "|") <+> (text n) <+> (hsep $ map text ns) <+> (text "->")

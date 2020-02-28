@@ -79,7 +79,7 @@ parseData = do
   return $ Data n ns (v:vs)
 
 parseVariant :: Parser Variant
-parseVariant = do
+parseVariant = tagLoc $ do
   n  <- uName
   ts <- many (try $ parseBType)
   return $ Variant n ts
