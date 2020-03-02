@@ -4,7 +4,7 @@ import Parser.AST
 
 import Error.Print
 import Data.Char
-import Text.Parsec ((<|>), (<?>), try, many, many1)
+import Text.Parsec ((<|>), (<?>), try, many, many1, sepBy)
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Char as C
 import qualified Text.Parsec.Combinator as CB
@@ -53,18 +53,38 @@ tagLoc p = do
   l1 <- getLoc
   return $ r (l0 <> l1)
 
+-- TEMPLATE
+
+parseTemplate :: Parser Template
+parseTemplate = do
+  ts <- bracket "<" (parseTemplateSpec `sepBy` (string ",")) ">"
+  return $ Template ts
+
+parseTemplateSpec :: Parser TemplateSpec
+parseTemplateSpec = tagLoc $ do
+  tp <- parseTemplateParam
+  n  <- lName
+  return $ TemplateSpec tp n
+
+parseTemplateParam :: Parser TemplateParam
+parseTemplateParam = do
+  try $ string "class"
+  ts <- CB.option [] $ bracket "<" (parseTemplateParam `sepBy` (string ",")) ">"
+  return $ TemplateParam ts 
+
 -- COMB
 
 parseComb :: Parser (Loc -> Comb)
 parseComb = do
   try $ string "let"
   n  <- lName
+  tp <- CB.optionMaybe parseTemplate 
   vs <- many lName
   string ":"
   t  <- parseType
   string "="
   e  <- parseExp
-  return $ Comb n vs t e
+  return $ Comb n tp vs t e
 
 -- DATA
 
@@ -72,11 +92,12 @@ parseData :: Parser (Loc -> Data)
 parseData = do
   try $ string "data"
   n  <- uName
+  tp <- CB.optionMaybe parseTemplate
   ns <- many lName 
   string "="
   v  <- parseVariant
   vs <- many $ string "|" *> parseVariant
-  return $ Data n ns (v:vs)
+  return $ Data n tp ns (v:vs)
 
 parseVariant :: Parser Variant
 parseVariant = tagLoc $ do
@@ -239,7 +260,7 @@ integer = (rd <$> many1 C.digit) <* white
 
 comment :: Parser ()
 comment = (try $ string "/*") >> skip >> return ()
-  where skip = (string "*/") <|> (C.anyChar  >> skip)
+  where skip = (try $ string "*/") <|> (C.anyChar  >> skip)
 
 white :: Parser ()
 white = P.skipMany (comment <|> (C.space <|> C.newline <|> C.crlf <|> C.tab) *> return ())

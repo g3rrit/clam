@@ -22,14 +22,25 @@ instance Pretty Module where
       Left c  -> pp c
       Right d -> pp d) ts)
 
+instance Pretty Template where
+  pp (Template ts) = 
+    "<" <+> (hsep $ map pp ts) <+> ">"
+
+instance Pretty TemplateSpec where
+  pp (TemplateSpec tp n _) = (pp tp) <+> (text n)
+
+instance Pretty TemplateParam where
+  pp (TemplateParam []) = "class"
+  pp (TemplateParam xs) = "class <" <+> (hsep $ map (\x -> pp x <+> ",") xs) <+> ">"
+
 instance Pretty Data where
-  pp (Data n ns vs _) = 
-    "data" <+> (text n) <+> (hsep $ map text ns) 
+  pp (Data n tp ns vs _) = 
+      "data" <+> (text n) <+> (maybe "" pp tp) <+> (hsep $ map text ns) 
       $$ (nest 2 $ vcat $ map (pp) vs)
 
 instance Pretty Comb where
-  pp (Comb n ns t e _) = 
-    "let" <+> (text n) <+> (vcat $ map text ns) <+> colon <+> (pp t) 
+  pp (Comb n tp ns t e _) = 
+      "let" <+> (text n) <+> (maybe "" pp tp) <+> (vcat $ map text ns) <+> colon <+> (pp t) 
       $$ (nest 2 $ equals <+> (pp e))
 
 instance Pretty Variant where

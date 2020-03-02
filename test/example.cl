@@ -1,16 +1,20 @@
 mod Main
 
+let a <class a> a b : A 
+  = 10
+
 data Bool = True | False
 
-data Pair b = Pair *Int b
+data Pair b 
+  = Pair *Int b
 
-data Arrow a b = Arrow (a -> b -> c)
+data Arrow <class a> a b = Arrow (a -> b -> c)
 
-data Arrow a b = Arrow ((a -> b) -> c)
+data Arrow <class a, class b> a b = Arrow ((a -> b) -> c)
 
-data Arrow a b = Arrow (Arrow True b -> b -> c)
+data Arrow <class b, class <class, class<class, class>, class<class>> a> a b = Arrow (Arrow True b -> b -> c)
 
-let main : IO a
+let main <class b, class <class, class<class, class>, class<class>> a> : IO a
   = print
   ; b : A b c = [ a b -> 20 ]
   ; b : B b c = [ a b -> 20 ]

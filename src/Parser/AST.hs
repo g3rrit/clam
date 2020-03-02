@@ -10,33 +10,33 @@ type Name
 data Module 
   = Module String [Either Comb Data]
 
-data Data
-  = Data Name [Name] [Variant] Loc -- data List a = Var | Var
+data Template
+  = Template [TemplateSpec]     -- <class t, class b>
   deriving (Show)
 
-instance Locate Data where
-  loc (Data _ _ _ l) = l
+data TemplateSpec
+  = TemplateSpec TemplateParam Name Loc -- class<class, class<class>> t
+  deriving (Show)
+
+data TemplateParam
+  = TemplateParam [TemplateParam]
+  deriving (Show)
+  
+data Data
+  = Data Name (Maybe Template) [Name] [Variant] Loc -- data List a = Var | Var
+  deriving (Show)
 
 data Variant 
   = Variant Name [Type] Loc       -- List a (List a)
   deriving (Show)
 
-instance Locate Variant where
-  loc (Variant _ _ l) = l
-
 data Comb 
-  = Comb Name [Name] Type Exp Loc  -- let foo a b : Type = exp
+  = Comb Name (Maybe Template) [Name] Type Exp Loc  -- let foo a b : Type = exp
   deriving (Show)
-
-instance Locate Comb where
-  loc (Comb _ _ _ _ l) = l
 
 data Alter 
   = Alter Name [Name] Exp Loc        -- List x xs -> exp
   deriving (Show)
-
-instance Locate Alter where
-  loc (Alter _ _ _ l) = l
 
 data Exp 
   = EVar Name Loc              -- x
@@ -49,17 +49,6 @@ data Exp
   | ESeq Exp Exp               -- exp ; exp
   | EAp Exp Exp                -- exp exp
   deriving (Show)
-
-instance Locate Exp where
-  loc = \case 
-    EVar _ l     -> l
-    EPrim _ l    -> l
-    ELam _ _ l   -> l
-    EIf _ _ _ l  -> l
-    ECase _ _ l  -> l
-    ELet _ _ _ l -> l
-    ESeq l r     -> (loc l) <> (loc r)
-    EAp l r      -> (loc l) <> (loc r)
 
 data Prim 
   = PInt Int
@@ -75,6 +64,29 @@ data Type
   | TSptr Type                 -- *Type
   deriving (Show)
 
+instance Locate Data where
+  loc (Data _ _ _ _ l) = l
+
+instance Locate Variant where
+  loc (Variant _ _ l) = l
+
+instance Locate Comb where
+  loc (Comb _ _ _ _ _ l) = l
+
+instance Locate Alter where
+  loc (Alter _ _ _ l) = l
+
+instance Locate Exp where
+  loc = \case 
+    EVar _ l     -> l
+    EPrim _ l    -> l
+    ELam _ _ l   -> l
+    EIf _ _ _ l  -> l
+    ECase _ _ l  -> l
+    ELet _ _ _ l -> l
+    ESeq l r     -> (loc l) <> (loc r)
+    EAp l r      -> (loc l) <> (loc r)
+
 instance Locate Type where
   loc = \case 
     TFn l r   -> (loc l) <> (loc r)
@@ -84,4 +96,5 @@ instance Locate Type where
     TRef t    -> loc t
     TUptr t   -> loc t
     TSptr t   -> loc t
+
 
