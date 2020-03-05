@@ -4,41 +4,33 @@ module Parser.AST where
 
 import Error.Print
 
-type Name 
+type Name
   = String
 
-data Module 
+data Module
   = Module String [Either Comb Data]
 
 data Template
-  = Template [TemplateSpec]     -- <class t, class b>
+  = Template [Name]     -- <t b>
   deriving (Show)
 
-data TemplateSpec
-  = TemplateSpec TemplateParam Name Loc -- class<class, class<class>> t
-  deriving (Show)
-
-data TemplateParam
-  = TemplateParam [TemplateParam]
-  deriving (Show)
-  
 data Data
   = Data Name (Maybe Template) [Name] [Variant] Loc -- data List a = Var | Var
   deriving (Show)
 
-data Variant 
+data Variant
   = Variant Name [Type] Loc       -- List a (List a)
   deriving (Show)
 
-data Comb 
+data Comb
   = Comb Name (Maybe Template) [Name] Type Exp Loc  -- let foo a b : Type = exp
   deriving (Show)
 
-data Alter 
+data Alter
   = Alter Name [Name] Exp Loc        -- List x xs -> exp
   deriving (Show)
 
-data Exp 
+data Exp
   = EVar Name Loc              -- x
   | EPrim Prim Loc             -- 10
   | EConst Name Loc               -- True
@@ -50,11 +42,11 @@ data Exp
   | EAp Exp Exp                -- exp exp
   deriving (Show)
 
-data Prim 
+data Prim
   = PInt Int
   deriving (Show)
 
-data Type 
+data Type
   = TFn Type Type              -- Type -> Type
   | TPrim Name Loc                -- Bool
   | TKind Type Type            -- Either Type Type
@@ -77,7 +69,7 @@ instance Locate Alter where
   loc (Alter _ _ _ l) = l
 
 instance Locate Exp where
-  loc = \case 
+  loc = \case
     EVar _ l     -> l
     EPrim _ l    -> l
     ELam _ _ l   -> l
@@ -88,7 +80,7 @@ instance Locate Exp where
     EAp l r      -> (loc l) <> (loc r)
 
 instance Locate Type where
-  loc = \case 
+  loc = \case
     TFn l r   -> (loc l) <> (loc r)
     TPrim _ l -> l
     TKind l r -> (loc l) <> (loc r)
@@ -96,5 +88,3 @@ instance Locate Type where
     TRef t    -> loc t
     TUptr t   -> loc t
     TSptr t   -> loc t
-
-

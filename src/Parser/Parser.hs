@@ -16,16 +16,16 @@ type Parser = P.Parsec String ()
 data PError = PError Loc String
 
 parse :: String -> String -> Either PError Module
-parse file input = 
+parse file input =
   case P.runParser parseModule () file input of
-    Left err -> Left $ let epos = P.errorPos err 
+    Left err -> Left $ let epos = P.errorPos err
                            spos = (P.sourceLine epos, P.sourceColumn epos)
                            sloc = Loc spos spos
-                       in PError sloc 
+                       in PError sloc
                             $ showErrorMessages $ ER.errorMessages err
     Right tl -> Right tl
-    
-showErrorMessages ms = 
+
+showErrorMessages ms =
   ER.showErrorMessages "or" "unknown" "expecting" "unexpected" "end of input" ms
 
 parseModule :: Parser Module
@@ -33,8 +33,8 @@ parseModule = do
   white
   string "mod"
   m  <- uName
-  dc <- (many $ (Left <$> (tagLoc parseComb)) 
-          <|> (Right <$> (tagLoc parseData))) 
+  dc <- (many $ (Left <$> (tagLoc parseComb))
+          <|> (Right <$> (tagLoc parseData)))
           <* P.eof
   return $ Module m dc
 
@@ -57,20 +57,8 @@ tagLoc p = do
 
 parseTemplate :: Parser Template
 parseTemplate = do
-  ts <- bracket "<" (parseTemplateSpec `sepBy` (string ",")) ">"
+  ts <- bracket "<" (many lName) ">"
   return $ Template ts
-
-parseTemplateSpec :: Parser TemplateSpec
-parseTemplateSpec = tagLoc $ do
-  tp <- parseTemplateParam
-  n  <- lName
-  return $ TemplateSpec tp n
-
-parseTemplateParam :: Parser TemplateParam
-parseTemplateParam = do
-  try $ string "class"
-  ts <- CB.option [] $ bracket "<" (parseTemplateParam `sepBy` (string ",")) ">"
-  return $ TemplateParam ts 
 
 -- COMB
 
@@ -78,7 +66,7 @@ parseComb :: Parser (Loc -> Comb)
 parseComb = do
   try $ string "let"
   n  <- lName
-  tp <- CB.optionMaybe parseTemplate 
+  tp <- CB.optionMaybe parseTemplate
   vs <- many lName
   string ":"
   t  <- parseType
@@ -93,7 +81,7 @@ parseData = do
   try $ string "data"
   n  <- uName
   tp <- CB.optionMaybe parseTemplate
-  ns <- many lName 
+  ns <- many lName
   string "="
   v  <- parseVariant
   vs <- many $ string "|" *> parseVariant
@@ -138,7 +126,7 @@ parseELetPrefix = do
   mt <- CB.optionMaybe parseType
   string "="
   return $ \l e -> ELet n mt e l
-  
+
 parseEIfPrefix :: Parser (Loc -> Exp -> Exp)
 parseEIfPrefix = do
   try $ string "if"
@@ -165,30 +153,30 @@ parseELam = tagLoc $ do
   try $ string "["
   ns <- many lName
   string "->"
-  e  <- parseExp 
+  e  <- parseExp
   string "]"
   return $ ELam ns e
 
 parseECase :: Parser Exp
 parseECase = tagLoc $ do
   try $ string "match"
-  e <- parseExp 
+  e <- parseExp
   vs <- many parseAlter
   return $ ECase e vs
 
 parseAlter :: Parser Alter
-parseAlter = tagLoc $ do 
+parseAlter = tagLoc $ do
   try $ string "|"
   c  <- uName
   vs <- many lName
-  string "->" 
+  string "->"
   e  <- parseUExp
   return $ Alter c vs e
 
 -- TYPES
 
 parseType :: Parser Type
-parseType = E.buildExpressionParser 
+parseType = E.buildExpressionParser
   [ [ E.Prefix (TRef <$ (string "&")) ]
   , [ E.Prefix (TSptr <$ (string "*")) ]
   , [ E.Prefix (TUptr <$ (string "^")) ]
@@ -226,7 +214,7 @@ parsePrimInt = PInt <$> integer
 reserved = [ "data", "let", "match", "end", "if", "then", "else"]
 
 satisfy :: Parser a -> (a -> Bool) -> Parser a
-satisfy p f = do 
+satisfy p f = do
   r <- p
   if f r then return r else P.parserZero
 
@@ -267,4 +255,3 @@ white = P.skipMany (comment <|> (C.space <|> C.newline <|> C.crlf <|> C.tab) *> 
 
 white1 :: Parser ()
 white1 = CB.skipMany1 (comment <|> (C.space <|> C.newline <|> C.crlf <|> C.tab) *> return ()) <|> P.eof
-
