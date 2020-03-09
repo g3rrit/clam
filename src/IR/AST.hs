@@ -9,8 +9,9 @@ type Name
 type Id
   = String
 
-type Tag
+data Tag
   = Tag Name Template Type
+  deriving (Show)
 
 type Namespace
   = M.Map Id Tag
@@ -45,14 +46,11 @@ data Comb
   = Comb Name Template [Name] Type Exp
   deriving (Show)
 
-data Env
-  = Env (Name ->
-
 type Alter
   = (Name, [Name], Exp)        -- List x xs -> exp
 
 data Exp
-  = ECall Name [Type] [Exp]    -- fun <int, int> 10 10
+  = ECall Name [Type]          -- fun <int, int>
   | EVar Name                  -- x
   | EPrim Prim                 -- 10
   | ESeq Exp Exp               -- exp ; exp
