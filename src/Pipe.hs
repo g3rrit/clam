@@ -1,28 +1,34 @@
+{-# LANGUAGE TypeApplications #-}
+
 module Pipe where
 
 import Prelude hiding (sequence)
-import System.Exit
 import Control.Monad.Parallel
 
 import Util
 import Error.Print
+import Error.Error
 import Text.PrettyPrint
+import Backend.Backend
+import Backend.BackendCpp
+import Backend.BackendEval
 import qualified Parser.Pretty as PP
 import qualified Parser.AST as PA
 import qualified Parser.Parser as PP
-import qualified IR.AST as IA
+import qualified IR.IR as IR
 
-check :: IO (Maybe a) -> IO a
-check a = a >>= (maybe exitFailure return)
-
-compile :: [File] -> IO ()
-compile fs = do
+run :: [File] -> String -> IO ()
+run fs be = do
   ms <- check $ parse fs
   putStrLn $ "------ AST -----"
   putStrLn $ concat $ map (render . PP.pretty) ms
   putStrLn $ "------ --- -----"
   u  <- check $ genUnit ms
-  check $ genCode u
+
+  case be of
+    "cpp" -> consume @BackendCpp u
+    "e"   -> consume @BackendEval u
+    _ -> panic $ "invalid backend (" ++ be ++ ")"
 
 parse :: [File] -> IO (Maybe [PA.Module])
 parse fs = sequence <$> (forM fs $ \f -> do
@@ -33,8 +39,5 @@ parse fs = sequence <$> (forM fs $ \f -> do
     Right ast -> return $ Just ast)
 
 
-genUnit :: [PA.Module] -> IO (Maybe IA.Unit)
-genUnit ms = return Nothing
-
-genCode :: IA.Unit -> IO (Maybe ())
-genCode u = return Nothing
+genUnit :: [PA.Module] -> IO (Maybe IR.Unit)
+genUnit ms = return $ Just undefined

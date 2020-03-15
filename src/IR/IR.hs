@@ -1,4 +1,4 @@
-module IR.AST where
+module IR.IR where
 
 import qualified Parser.AST as P
 import qualified Data.Map.Lazy as M

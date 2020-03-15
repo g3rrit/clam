@@ -11,5 +11,5 @@ version = "0.0.0"
 main :: IO ()
 main = do
   putStrLn $ "CLAM " ++ version
-  compile ["test/example.cl"]
+  run ["test/example.cl"] "cpp"
   putStrLn "Done!"
