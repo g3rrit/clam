@@ -16,8 +16,8 @@ data Arrow <b a> a b = Arrow (Arrow True b -> b -> c)
 
 let main <b a> : IO a
   = print
-  ; b : A b c = [ a b -> 20 ]
-  ; b : B b c = [ a b -> 20 ]
+  ; b : A b c = \ a b -> 20
+  ; b : B b c = \ a b -> 20
   ; a := 10
   ; e := 1
   ; c := 1
@@ -33,10 +33,10 @@ let foo : IO
     | Bla a b -> a b $ c d
     | List -> (match b
         | G -> (a := 0 ; b := 1; 10)
-        | F a b b c -> [ a b -> f a b ] a b)
+        | F a b b c -> (\ a b -> ( f a b )) a b)
     | List -> (match b
         | G -> (a := 0 ; b := 1; 10)
-        | F a b b c -> [ a b -> f a b ] a b)
+        | F a b b c -> (\ a b -> ( f a b )) a b)
   ; a b c
 
 let bar : IO

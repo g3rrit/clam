@@ -105,6 +105,8 @@ parseExp = CB.chainl1 parseUExp (ESeq <$ (string ";"))
 
 parseExpPrim :: Parser Exp
 parseExpPrim = bracket "(" parseExp ")"
+  <|> parseELet
+  <|> parseEIf
   <|> parseELam
   <|> parseECase
   <|> ((string ">>") *> (string ";") *> parseExp)
@@ -115,26 +117,25 @@ parseExpPrim = bracket "(" parseExp ")"
 
 table = [ [ E.Infix (return EAp) E.AssocLeft ]
         , [ E.Infix (EAp <$ (try $ string "$")) E.AssocLeft ]
-        , [ E.Prefix (tagLoc parseEIfPrefix) ]
-        , [ E.Prefix (tagLoc parseELetPrefix) ]
-        --, [ E.Infix (ESeq <$ (try $ string ";")) E.AssocLeft ]
         ]
 
-parseELetPrefix :: Parser (Loc -> Exp -> Exp)
-parseELetPrefix = do
+parseELet :: Parser Exp
+parseELet = tagLoc $ do
   n  <- try $ lName <* (string ":")
   mt <- CB.optionMaybe parseType
   string "="
-  return $ \l e -> ELet n mt e l
+  e  <- parseUExp
+  return $ ELet n mt e
 
-parseEIfPrefix :: Parser (Loc -> Exp -> Exp)
-parseEIfPrefix = do
-  try $ string "if"
+parseEIf :: Parser Exp
+parseEIf = tagLoc $ do
+  try $ try $ string "if"
   c <- parseExp
   string "then"
   t <- parseExp
   string "else"
-  return $ \l e -> EIf c t e l
+  e <- parseUExp
+  return $ EIf c t e
 
 parseEVar :: Parser Exp
 parseEVar = tagLoc $ EVar <$> (try lName)
@@ -150,11 +151,10 @@ parseEConst = tagLoc $ EConst <$> (try uName)
 
 parseELam :: Parser Exp
 parseELam = tagLoc $ do
-  try $ string "["
+  try $ string "\\"
   ns <- many lName
   string "->"
-  e  <- parseExp
-  string "]"
+  e  <- parseUExp
   return $ ELam ns e
 
 parseECase :: Parser Exp
