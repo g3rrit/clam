@@ -17,7 +17,7 @@ type Namespace
   = M.Map Id Tag
 
 data Template
-  = Template Int
+  = Template Integer
    deriving (Show)
 
 data Unit
@@ -35,7 +35,7 @@ data Module
   } deriving (Show)
 
 data Data
-  = Data Name Template [Name] Variant
+  = Data Name Template Variant
   deriving (Show)
 
 data Variant

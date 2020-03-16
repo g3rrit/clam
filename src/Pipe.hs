@@ -18,17 +18,13 @@ import qualified Parser.Parser as PP
 import qualified IR.IR as IR
 
 run :: [File] -> String -> IO ()
-run fs be = do
+run fs args = do
   ms <- check $ parse fs
   putStrLn $ "------ AST -----"
   putStrLn $ concat $ map (render . PP.pretty) ms
   putStrLn $ "------ --- -----"
   u  <- check $ genUnit ms
-
-  checkb $ case be of
-    "cpp" -> consume @BackendCpp u
-    "e"   -> consume @BackendEval u
-    _ -> panic $ "invalid backend (" ++ be ++ ")"
+  checkb $ backend u args
 
 parse :: [File] -> IO (Maybe [PA.Module])
 parse fs = sequence <$> (forM fs $ \f -> do

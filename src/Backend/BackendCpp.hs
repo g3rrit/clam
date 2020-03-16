@@ -10,24 +10,21 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
 import System.IO
 
-import Backend.Backend
 import IR.IR
 
-data BackendCpp
+backendCpp :: Unit -> IO Bool
+backendCpp unit = do
+  putStrLn "Backend Cpp"
 
-instance Backend BackendCpp where
-  consume unit = do
-    putStrLn "Backend Cpp"
+  forM (M.toList $ umods unit) $ \(i, m) -> do
+    (tp, h) <- openTempFile "." $ show i
 
-    forM (M.toList $ umods unit) $ \(i, m) -> do
-      (tp, h) <- openTempFile "." $ show i
+    e <- runExceptT (runReaderT (codegen m) $ EnvState unit i h)
+    case e of
+      Left err -> return $ Left err
+      Right _  -> return $ Right tp
 
-      e <- runExceptT (runReaderT (codegen m) $ EnvState unit i h)
-      case e of
-        Left err -> return $ Left err
-        Right _  -> return $ Right tp
-
-    return True
+  return True
 
 
 class Codegen a where
@@ -35,6 +32,30 @@ class Codegen a where
 
 instance Codegen Name where
   cgen (m, d, i) = write $ "__" ++ (show m) ++ "_" ++ (show d) ++ "_" ++ (show i)
+
+instance Codegen Module where
+  cgen (Module _ _ ds cs) = do
+    -- gen type forward decl
+    forM ds $ \(Data n@(m, d, i) t _) -> do
+      genTemp m d t
+      write "struct "
+      cgen n
+      write ";"
+
+    -- gen fn forward decl
+    forM cs $ \(Comb n@(m, d, i) t as ty _) -> do
+      genTemp m d t
+
+
+
+    return ()
+    where
+      genTemp m d (Template t) = do
+        write "template <"
+        forM [1..t] $ \t' ->
+          write "class " >> cgen ((m, d, t') :: Name) >> write ","
+        write ">\n"
+
 
 
 codegen :: Module -> Env ()
