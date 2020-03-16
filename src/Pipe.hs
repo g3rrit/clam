@@ -25,7 +25,7 @@ run fs be = do
   putStrLn $ "------ --- -----"
   u  <- check $ genUnit ms
 
-  case be of
+  checkb $ case be of
     "cpp" -> consume @BackendCpp u
     "e"   -> consume @BackendEval u
     _ -> panic $ "invalid backend (" ++ be ++ ")"
