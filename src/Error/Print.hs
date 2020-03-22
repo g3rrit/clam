@@ -3,8 +3,8 @@
 
 module Error.Print where
 
-import qualified Text.Parsec.Pos as P
 import System.IO
+import qualified Text.Parsec.Pos as P
 import Control.Monad
 
 type Pos = (Int, Int)

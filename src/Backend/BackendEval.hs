@@ -1,6 +1,8 @@
 module Backend.BackendEval where
 
+import Util
+import Control.Monad.Trans
 import IR.IR
 
-backendEval :: Unit -> IO Bool
-backendEval unit = putStrLn "Backend Eval" >> return True
+backendEval :: Unit -> RIO Bool
+backendEval unit = (liftIO $ putStrLn "Backend Eval") >> return True

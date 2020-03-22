@@ -3,6 +3,7 @@
 
 module Backend.BackendCpp where
 
+import Util
 import qualified Data.Map.Lazy as M
 import Control.Monad
 import Control.Monad.Trans
@@ -12,18 +13,22 @@ import System.IO
 
 import IR.IR
 
-backendCpp :: Unit -> IO Bool
+backendCpp :: Unit -> RIO Bool
 backendCpp unit = do
-  putStrLn "Backend Cpp"
+  liftIO $ putStrLn "Backend Cpp"
 
-  forM (M.toList $ umods unit) $ \(i, m) -> do
-    (tp, h) <- openTempFile "." $ show i
+  r <- forM (M.toList $ umods unit) $ \(i, m) -> do
+    (tp, h) <- liftIO $ openTempFile "." $ show i
 
     e <- runExceptT (runReaderT (codegen m) $ EnvState unit i h)
     case e of
-      Left err -> return $ Left err
+      Left err -> return $ Left (tp, err)
       Right _  -> return $ Right tp
 
+  let es = concat $ map (\c -> case c of Left (_, err) -> [err] ;Right _ -> []) r
+  let ts = concat $ map (\c -> case c of Left (tp, _) -> [tp] ;Right tp -> [tp]) r
+
+  -- compile files here
   return True
 
 
@@ -74,7 +79,7 @@ data EnvState
   }
 
 type Env
-  = ReaderT EnvState (ExceptT CgenErr IO)
+  = ReaderT EnvState (ExceptT CgenErr RIO)
 
 write :: String -> Env ()
 write t = do

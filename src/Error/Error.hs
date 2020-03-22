@@ -2,17 +2,19 @@ module Error.Error where
 
 import System.Exit
 
+import Util
+import Control.Monad.Trans
 import Error.Print
 
-check :: IO (Maybe a) -> IO a
-check a = a >>= (maybe exitFailure return)
+check :: RIO (Maybe a) -> RIO a
+check a = a >>= (maybe (liftIO exitFailure) return)
 
-checkb :: IO Bool -> IO ()
+checkb :: RIO Bool -> RIO ()
 checkb a = a >>= \a' ->
   if a' then return ()
-  else exitFailure
+  else liftIO exitFailure
 
-panic :: String -> IO a
+panic :: String -> RIO a
 panic msg = do
-  putStrLn $ "Error | " ++ msg
-  exitFailure
+  liftIO $ putStrLn $ "Error | " ++ msg
+  liftIO exitFailure

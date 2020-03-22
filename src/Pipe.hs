@@ -2,9 +2,6 @@
 
 module Pipe where
 
-import Prelude hiding (sequence)
-import Control.Monad.Parallel
-
 import Util
 import Error.Print
 import Error.Error
@@ -16,24 +13,26 @@ import qualified Parser.Pretty as PP
 import qualified Parser.AST as PA
 import qualified Parser.Parser as PP
 import qualified IR.IR as IR
+import Control.Monad
+import Control.Monad.Trans
 
-run :: [File] -> String -> IO ()
-run fs args = do
+pipe :: [File] -> RIO ()
+pipe fs = do
   ms <- check $ parse fs
-  putStrLn $ "------ AST -----"
-  putStrLn $ concat $ map (render . PP.pretty) ms
-  putStrLn $ "------ --- -----"
+  liftIO $ putStrLn $ "------ AST -----"
+  liftIO $ putStrLn $ concat $ map (render . PP.pretty) ms
+  liftIO $ putStrLn $ "------ --- -----"
   u  <- check $ genUnit ms
-  checkb $ backend u args
+  checkb $ backend u
 
-parse :: [File] -> IO (Maybe [PA.Module])
+parse :: [File] -> RIO (Maybe [PA.Module])
 parse fs = sequence <$> (forM fs $ \f -> do
-  c <- readFile f
+  c <- liftIO $ readFile f
   let r = PP.parse (map (\sl -> if sl == '/' then '.' else sl) f) c
   case r of
-    Left (PP.PError p e) -> printError f p ParserError e >> return Nothing
+    Left (PP.PError p e) -> (liftIO $ printError f p ParserError e) >> return Nothing
     Right ast -> return $ Just ast)
 
 
-genUnit :: [PA.Module] -> IO (Maybe IR.Unit)
+genUnit :: [PA.Module] -> RIO (Maybe IR.Unit)
 genUnit ms = return $ Just undefined
