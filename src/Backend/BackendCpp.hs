@@ -21,6 +21,7 @@ backendCpp unit = do
     (tp, h) <- liftIO $ openTempFile "." $ show i
 
     e <- runExceptT (runReaderT (codegen m) $ EnvState unit i h)
+    hClose h
     case e of
       Left err -> return $ Left (tp, err)
       Right _  -> return $ Right tp
@@ -30,7 +31,8 @@ backendCpp unit = do
 
   -- compile files here
   return True
-
+  where 
+    cleanup ts = undefined
 
 class Codegen a where
   cgen :: a -> Env ()
@@ -39,29 +41,22 @@ instance Codegen Name where
   cgen (m, d, i) = write $ "__" ++ (show m) ++ "_" ++ (show d) ++ "_" ++ (show i)
 
 instance Codegen Module where
-  cgen (Module _ _ ds cs) = do
+  cgen m = do
+    let ds = mdata m
+    let cs = mcomb m
     -- gen type forward decl
-    forM ds $ \(Data n@(m, d, i) t _) -> do
-      genTemp m d t
+    forM ds $ \(Data n _) -> do
       write "struct "
       cgen n
       write ";"
 
     -- gen fn forward decl
-    forM cs $ \(Comb n@(m, d, i) t as ty _) -> do
-      genTemp m d t
+    forM cs $ \(Comb n as ty _) -> do
+      return ()
 
 
 
     return ()
-    where
-      genTemp m d (Template t) = do
-        write "template <"
-        forM [1..t] $ \t' ->
-          write "class " >> cgen ((m, d, t') :: Name) >> write ","
-        write ">\n"
-
-
 
 codegen :: Module -> Env ()
 codegen m = undefined

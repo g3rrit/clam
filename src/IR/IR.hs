@@ -9,13 +9,6 @@ type Name
 type Id
   = String
 
-data Tag
-  = Tag Name Template Type
-  deriving (Show)
-
-type Namespace
-  = M.Map Id Tag
-
 data Template
   = Template Integer
    deriving (Show)
@@ -28,14 +21,23 @@ data Unit
 
 data Module
   = Module
-  { mid   :: Integer
-  , mns   :: Namespace
-  , mdata :: M.Map Name Data
-  , mcomb :: M.Map Name Comb
+  { mid    :: Integer
+  , mtdata :: M.Map Name TData
+  , mtcomb :: M.Map Name TComb
+  , mdata  :: M.Map Name Data
+  , mcomb  :: M.Map Name Comb
   } deriving (Show)
 
+data TData 
+  = TData [Name] Data
+  deriving (Show)
+
+data TComb
+  = TComb [Name] Comb
+  deriving (Show)
+
 data Data
-  = Data Name Template Variant
+  = Data Name Variant
   deriving (Show)
 
 data Variant
@@ -43,7 +45,7 @@ data Variant
   deriving (Show)
 
 data Comb
-  = Comb Name Template [Name] Type Exp
+  = Comb Name [Name] Type Exp
   deriving (Show)
 
 type Alter
