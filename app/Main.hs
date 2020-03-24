@@ -13,6 +13,7 @@ getConfig = return $ Config
   , cpath    = "test"
   , cbackend = BackendCpp
   , coutput  = "./a.out"
+  , ccc      = "clang++"
   }
 
 main :: IO ()

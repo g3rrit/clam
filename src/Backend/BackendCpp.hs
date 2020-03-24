@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Backend.BackendCpp where
 
@@ -10,6 +11,9 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
 import System.IO
+import System.Directory
+import System.Process
+import System.Exit
 
 import IR.IR
 
@@ -21,18 +25,29 @@ backendCpp unit = do
     (tp, h) <- liftIO $ openTempFile "." $ show i
 
     e <- runExceptT (runReaderT (codegen m) $ EnvState unit i h)
-    hClose h
+    liftIO $ hClose h
     case e of
       Left err -> return $ Left (tp, err)
       Right _  -> return $ Right tp
 
-  let es = concat $ map (\c -> case c of Left (_, err) -> [err] ;Right _ -> []) r
-  let ts = concat $ map (\c -> case c of Left (tp, _) -> [tp] ;Right tp -> [tp]) r
+  let es = concatMap (\c -> case c of Left (_, err) -> [err] ;Right _ -> []) r
+  let ts = concatMap (\c -> case c of Left (tp, _) -> [tp] ;Right tp -> [tp]) r
 
-  -- compile files here
-  return True
+  (if length es >= 1 
+  then (liftIO $ putStrLn "Error") >> return False
+  else execCC ts) <* cleanup ts
+
   where 
-    cleanup ts = undefined
+    cleanup ts = forM_ ts (liftIO . removeFile)
+
+execCC :: [FilePath] -> RIO Bool
+execCC ts = do
+  cc <- config ccc
+  o  <- config coutput
+  e  <- liftIO $ system $ cc ++ " -o " ++ o ++ (concatMap (" " ++) ts)
+  case e of 
+    ExitSuccess    -> return True
+    ExitFailure e' -> (liftIO $ putStrLn $ "[" ++ cc ++ "] exited with error: " ++ (show e)) >> return False
 
 class Codegen a where
   cgen :: a -> Env ()
@@ -45,18 +60,17 @@ instance Codegen Module where
     let ds = mdata m
     let cs = mcomb m
     -- gen type forward decl
-    forM ds $ \(Data n _) -> do
+    forM_ ds $ \(Data n _) -> do
       write "struct "
       cgen n
       write ";"
 
     -- gen fn forward decl
-    forM cs $ \(Comb n as ty _) -> do
+    forM_ cs $ \(Comb n as ty _) -> do
       return ()
 
 
 
-    return ()
 
 codegen :: Module -> Env ()
 codegen m = undefined

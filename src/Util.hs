@@ -12,6 +12,7 @@ data Config
   , cpath    :: String
   , cbackend :: Backend
   , coutput  :: String
+  , ccc      :: String
   }
 
 data Backend 
@@ -25,4 +26,4 @@ run :: Config -> RIO a -> IO a
 run c r = runReaderT r c
 
 config :: (Config -> b) -> RIO b
-config f = reader f
+config = reader
