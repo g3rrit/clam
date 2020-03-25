@@ -110,9 +110,7 @@ parseExpPrim = bracket "(" parseExp ")"
   <|> parseELam
   <|> parseECase
   <|> ((string ">>") *> (string ";") *> parseExp)
-  <|> parseEConst
   <|> parseEPrim
-  <|> parseEVar
   <?> "simple expression"
 
 table = [ [ E.Infix (return EAp) E.AssocLeft ]
@@ -137,17 +135,12 @@ parseEIf = tagLoc $ do
   e <- parseUExp
   return $ EIf c t e
 
-parseEVar :: Parser Exp
-parseEVar = tagLoc $ EVar <$> (try lName)
-
 parseEPrim :: Parser Exp
 parseEPrim = tagLoc $ EPrim <$> parsePrim
 
 parsePrim :: Parser Prim
-parsePrim = PInt <$> integer
-
-parseEConst :: Parser Exp
-parseEConst = tagLoc $ EConst <$> (try uName)
+parsePrim = (PInt <$> integer)
+          <|> (PVar <$> name)
 
 parseELam :: Parser Exp
 parseELam = tagLoc $ do

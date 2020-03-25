@@ -31,23 +31,22 @@ data Alter
   deriving (Show)
 
 data Exp
-  = EVar Name Loc              -- x
-  | EPrim Prim Loc             -- 10
-  | EConst Name Loc               -- True
-  | ELam [Name] Exp Loc           -- [ a b -> exp ]
-  | EIf Exp Exp Exp Loc           -- if a then b else c | if a then b con
+  = EPrim Prim Loc                 -- 10
+  | ELam [Name] Exp Loc            -- \ a b -> exp
+  | EIf Exp Exp Exp Loc            -- if a then b else if a then b else >>
   | ECase Exp [Alter] Loc          -- match a | alter | alter end
   | ELet Name (Maybe Type) Exp Loc -- Name : Type = Exp
-  | ESeq Exp Exp               -- exp ; exp
-  | EAp Exp Exp                -- exp exp
+  | ESeq Exp Exp                   -- exp ; exp
+  | EAp Exp Exp                    -- exp exp
   deriving (Show)
 
 data Prim
   = PInt Int
+  | PVar Name
   deriving (Show)
 
 data Type
-  = TFn Type Type              -- Type -> Type
+  = TFn Type Type                 -- Type -> Type
   | TPrim Name Loc                -- Bool
   | TKind Type Type            -- Either Type Type
   | TGen Name Loc                 -- a
@@ -70,7 +69,6 @@ instance Locate Alter where
 
 instance Locate Exp where
   loc = \case
-    EVar _ l     -> l
     EPrim _ l    -> l
     ELam _ _ l   -> l
     EIf _ _ _ l  -> l

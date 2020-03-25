@@ -1,8 +1,10 @@
 mod Main
 
+/*
 let a <a> a b : A
   = 10
 
+*/
 data Bool = True | False
 
 data Pair b
