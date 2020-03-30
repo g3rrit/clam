@@ -32,6 +32,7 @@ data Alter
 
 data Exp
   = EPrim Prim Loc                 -- 10
+  | EVar Name Loc                  -- n
   | ELam [Name] Exp Loc            -- \ a b -> exp
   | EIf Exp Exp Exp Loc            -- if a then b else if a then b else >>
   | ECase Exp [Alter] Loc          -- match a | alter | alter end

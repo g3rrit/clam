@@ -46,6 +46,7 @@ instance Pretty Alter where
 instance Pretty Exp where
   pp = \case
     EPrim p _ -> pp p
+    EVar n _ -> text n
     ELet n mt e _ -> (text n) <+> colon <+> (maybe (text "undef") pp mt) <+> equals <+> (pp e)
     EIf c t e _ -> (text "if") <+> (pp c) $$ (text "then") <+> (pp t) $$ (text "else") <+> (pp e)
     ELam ns e _ -> lbrack <+> (hsep $ map text ns) <+> (text "->") <+> (pp e) <+> rbrack
@@ -55,7 +56,6 @@ instance Pretty Exp where
 
 instance Pretty Prim where
   pp (PInt i) = int i
-  pp (PVar v) = text v
 
 instance Pretty Type where
   pp = \case
