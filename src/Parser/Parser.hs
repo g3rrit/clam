@@ -53,26 +53,18 @@ tagLoc p = do
   l1 <- getLoc
   return $ r (l0 <> l1)
 
--- TEMPLATE
-
-parseTemplate :: Parser Template
-parseTemplate = do
-  ts <- bracket "<" (many lName) ">"
-  return $ Template ts
-
 -- COMB
 
 parseComb :: Parser (Loc -> Comb)
 parseComb = do
   try $ string "let"
   n  <- lName
-  tp <- CB.optionMaybe parseTemplate
   vs <- many lName
   string ":"
   t  <- parseType
   string "="
   e  <- parseExp
-  return $ Comb n tp vs t e
+  return $ Comb n vs t e
 
 -- DATA
 
@@ -80,12 +72,11 @@ parseData :: Parser (Loc -> Data)
 parseData = do
   try $ string "data"
   n  <- uName
-  tp <- CB.optionMaybe parseTemplate
   ns <- many lName
   string "="
   v  <- parseVariant
   vs <- many $ string "|" *> parseVariant
-  return $ Data n tp ns (v:vs)
+  return $ Data n ns (v:vs)
 
 parseVariant :: Parser Variant
 parseVariant = tagLoc $ do
@@ -176,16 +167,12 @@ parseType = E.buildExpressionParser
   [ [ E.Prefix (TRef <$ (string "&")) ]
   , [ E.Prefix (TSptr <$ (string "*")) ]
   , [ E.Prefix (TUptr <$ (string "^")) ]
-  , [ E.Infix (return TKind) E.AssocLeft ]
   , [ E.Infix (TFn <$ (string "->")) E.AssocRight ]
   ] parseTType
   <?> "type"
 
 parseTPrim :: Parser Type
 parseTPrim = tagLoc $ TPrim <$> uName
-
-parseTGen :: Parser Type
-parseTGen = tagLoc $ TGen <$> lName
 
 parseBType = E.buildExpressionParser
   [ [ E.Prefix (TRef <$ (string "&")) ]
@@ -197,7 +184,6 @@ parseBType = E.buildExpressionParser
 parseTType :: Parser Type
 parseTType = bracket "(" parseType ")"
   <|> (try $ parseTPrim)
-  <|> parseTGen
   <?> "ttype"
 
 -- PRIMITIVE

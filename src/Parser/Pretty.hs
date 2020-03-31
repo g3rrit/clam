@@ -22,18 +22,14 @@ instance Pretty Module where
       Left c  -> pp c
       Right d -> pp d) ts)
 
-instance Pretty Template where
-  pp (Template ts) =
-    "<" <+> (hsep $ map text ts) <+> ">"
-
 instance Pretty Data where
-  pp (Data n tp ns vs _) =
-      "data" <+> (text n) <+> (maybe "" pp tp) <+> (hsep $ map text ns)
+  pp (Data n ns vs _) =
+      "data" <+> (text n) <+> (hsep $ map text ns)
       $$ (nest 2 $ vcat $ map (pp) vs)
 
 instance Pretty Comb where
-  pp (Comb n tp ns t e _) =
-      "let" <+> (text n) <+> (maybe "" pp tp) <+> (vcat $ map text ns) <+> colon <+> (pp t)
+  pp (Comb n ns t e _) =
+      "let" <+> (text n) <+> (vcat $ map text ns) <+> colon <+> (pp t)
       $$ (nest 2 $ equals <+> (pp e))
 
 instance Pretty Variant where
@@ -61,8 +57,6 @@ instance Pretty Type where
   pp = \case
     TFn t0 t1 -> lparen <> (pp t0) <+> (text "->") <+> (pp t1) <> rparen
     TPrim n _ -> text n
-    TKind t0 t1 -> lparen <+> pp t0 <+> pp t1 <+> rparen
-    TGen n _ -> text n
     TRef t -> lparen <+> (text "&") <+> pp t <+> rparen
     TSptr t -> lparen <+> (text "*") <+> pp t <+> rparen
     TUptr t -> lparen <+> (text "^") <+> pp t <+> rparen

@@ -1,25 +1,23 @@
 mod Main
 
-/*
-let a <a> a b : A
+let a a b : A
   = 10
 
-*/
 data Bool = True | False
 
-data Pair b
-  = Pair *Int b
+data Pair
+  = Pair *Int A
 
-data Arrow <a> a b = Arrow (a -> b -> c)
+data Arrow = Arrow (A -> B -> C)
 
-data Arrow <a b> a b = Arrow ((a -> b) -> c)
+data Arrow = Arrow ((A -> B) -> C)
 
-data Arrow <b a> a b = Arrow (Arrow True b -> b -> c)
+data Arrow = Arrow (Arrow -> B -> B)
 
-let main <b a> : IO a
+let main : IO
   = print
-  ; b : A b c = \ a b -> 20
-  ; b : B b c = \ a b -> 20
+  ; b : A -> B = \ a b -> 20
+  ; b : B = \ a b -> 20
   ; a := 10
   ; e := 1
   ; c := 1

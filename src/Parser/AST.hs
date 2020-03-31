@@ -10,12 +10,8 @@ type Name
 data Module
   = Module String [Either Comb Data]
 
-data Template
-  = Template [Name]     -- <t b>
-  deriving (Show)
-
 data Data
-  = Data Name (Maybe Template) [Name] [Variant] Loc -- data List a = Var | Var
+  = Data Name [Name] [Variant] Loc -- data List a = Var | Var
   deriving (Show)
 
 data Variant
@@ -23,7 +19,7 @@ data Variant
   deriving (Show)
 
 data Comb
-  = Comb Name (Maybe Template) [Name] Type Exp Loc  -- let foo a b : Type = exp
+  = Comb Name [Name] Type Exp Loc  -- let foo a b : Type = exp
   deriving (Show)
 
 data Alter
@@ -49,21 +45,19 @@ data Prim
 data Type
   = TFn Type Type                 -- Type -> Type
   | TPrim Name Loc                -- Bool
-  | TKind Type Type            -- Either Type Type
-  | TGen Name Loc                 -- a
   | TRef Type                  -- &Type
   | TUptr Type                 -- ^Type
   | TSptr Type                 -- *Type
   deriving (Show)
 
 instance Locate Data where
-  loc (Data _ _ _ _ l) = l
+  loc (Data _ _ _ l) = l
 
 instance Locate Variant where
   loc (Variant _ _ l) = l
 
 instance Locate Comb where
-  loc (Comb _ _ _ _ _ l) = l
+  loc (Comb _ _ _ _ l) = l
 
 instance Locate Alter where
   loc (Alter _ _ _ l) = l
@@ -82,8 +76,6 @@ instance Locate Type where
   loc = \case
     TFn l r   -> (loc l) <> (loc r)
     TPrim _ l -> l
-    TKind l r -> (loc l) <> (loc r)
-    TGen _ l  -> l
     TRef t    -> loc t
     TUptr t   -> loc t
     TSptr t   -> loc t

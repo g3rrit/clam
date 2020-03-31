@@ -9,10 +9,6 @@ type Name
 type Id
   = String
 
-data Template
-  = Template Integer
-   deriving (Show)
-
 data Unit
   = Unit
   { uns   :: M.Map Id Integer
@@ -22,19 +18,9 @@ data Unit
 data Module
   = Module
   { mid    :: Integer
-  , mtdata :: M.Map Name TData
-  , mtcomb :: M.Map Name TComb
   , mdata  :: M.Map Name Data
   , mcomb  :: M.Map Name Comb
   } deriving (Show)
-
-data TData 
-  = TData [Name] Data
-  deriving (Show)
-
-data TComb
-  = TComb [Name] Comb
-  deriving (Show)
 
 data Data
   = Data Name Variant
@@ -52,13 +38,11 @@ type Alter
   = (Name, [Name], Exp)        -- List x xs -> exp
 
 data Exp
-  = ECall Name [Type]          -- fun <int, int>
-  | EVar Name                  -- x
+  = EVar Name                  -- x
   | EPrim Prim                 -- 10
   | ESeq Exp Exp               -- exp ; exp
+  | EApp Exp Exp               -- fun <int, int>
   | ELet Name Type Exp         -- Name : Type = Exp
-  | EConst Name                -- True
-  | EAp Exp Exp                -- exp exp
   | ELam [Name] Exp            -- \ a b -> exp
   | EIf Exp Exp Exp            -- if a then b else if a then b else >> ;
   | ECase Exp [Alter]          -- match a | alter | alter end
