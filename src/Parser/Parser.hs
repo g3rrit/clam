@@ -72,11 +72,10 @@ parseData :: Parser (Loc -> Data)
 parseData = do
   try $ string "data"
   n  <- uName
-  ns <- many lName
   string "="
   v  <- parseVariant
   vs <- many $ string "|" *> parseVariant
-  return $ Data n ns (v:vs)
+  return $ Data n (v:vs)
 
 parseVariant :: Parser Variant
 parseVariant = tagLoc $ do

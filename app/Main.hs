@@ -20,5 +20,5 @@ main :: IO ()
 main = do
   c <- getConfig
   putStrLn $ "CLAM " ++ (cversion c)
-  run c $ pipe ["test/example.cl"]
+  run c $ pipe ["test/example.clm"]
   putStrLn "Done!"

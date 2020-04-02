@@ -22,9 +22,17 @@ backendCpp unit = do
   liftIO $ putStrLn "Backend Cpp"
 
   r <- forM (M.toList $ umods unit) $ \(i, m) -> do
-    (tp, h) <- liftIO $ openTempFile "." $ show i
+    (tp, h) <- liftIO $ openTempFile "." $ show i ++ ".cpp"
 
-    e <- runExceptT (runReaderT (codegen m) $ EnvState unit i h)
+    liftIO $ putStrLn $ "writing to: " ++ tp
+    liftIO $ putStrLn "------------------------"
+
+    e <- runExceptT (runReaderT 
+          (codegen m 
+            >> when (i == i) cgenMain) $ EnvState unit i h) -- TODO: chance to i == 0
+
+    liftIO $ putStrLn "________________________"
+
     liftIO $ hClose h
     case e of
       Left err -> return $ Left (tp, err)
@@ -33,9 +41,12 @@ backendCpp unit = do
   let es = concatMap (\c -> case c of Left (_, err) -> [err] ;Right _ -> []) r
   let ts = concatMap (\c -> case c of Left (tp, _) -> [tp] ;Right tp -> [tp]) r
 
-  (if length es >= 1 
-  then (liftIO $ putStrLn "Error") >> return False
-  else execCC ts) <* cleanup ts
+  r <- (if length es >= 1 
+        then (liftIO $ putStrLn "Error") >> return False
+        else execCC ts) 
+       
+  cleanup ts
+  return r
 
   where 
     cleanup ts = forM_ ts (liftIO . removeFile)
@@ -63,7 +74,7 @@ instance Codegen Module where
     forM_ ds $ \(Data n _) -> do
       write "struct "
       cgen n
-      write ";"
+      write ";\n"
 
     -- gen fn forward decl
     forM_ cs $ \(Comb n as ty _) -> do
@@ -73,7 +84,10 @@ instance Codegen Module where
 
 
 codegen :: Module -> Env ()
-codegen m = undefined
+codegen = cgen
+
+cgenMain :: Env ()
+cgenMain = write "int main(int argc, char **argv) { return 0; }\n"
 
 -- Data Types
 
@@ -94,6 +108,7 @@ write :: String -> Env ()
 write t = do
   h <- asks eh
   liftIO $ hPutStr h t
+  liftIO $ putStr t -- testing
 
 getMod :: Integer -> Env (Maybe Module)
 getMod i = do

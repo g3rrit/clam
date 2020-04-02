@@ -8,23 +8,41 @@ type Name
   = String
 
 data Module
-  = Module String [Either Comb Data]
+  = Module 
+  { mname :: String 
+  , ms    :: [Either Comb Data]
+  } deriving (Show)
 
 data Data
-  = Data Name [Name] [Variant] Loc -- data List a = Var | Var
-  deriving (Show)
+  = Data 
+  { dname :: Name 
+  , dvars :: [Variant]
+  , dloc  :: Loc 
+  } deriving (Show)
 
 data Variant
-  = Variant Name [Type] Loc       -- List a (List a)
-  deriving (Show)
+  = Variant 
+  { vname  :: Name 
+  , vtypes :: [Type] 
+  , vloc   :: Loc       -- List a (List a)
+  } deriving (Show)
 
 data Comb
-  = Comb Name [Name] Type Exp Loc  -- let foo a b : Type = exp
-  deriving (Show)
+  = Comb 
+  { cname :: Name 
+  , cargs :: [Name] 
+  , ctype :: Type 
+  , cexp  :: Exp 
+  , cloc  :: Loc  -- let foo a b : Type = exp
+  } deriving (Show)
 
 data Alter
-  = Alter Name [Name] Exp Loc        -- List x xs -> exp
-  deriving (Show)
+  = Alter 
+  { acons :: Name 
+  , aargs :: [Name] 
+  , aexp  :: Exp 
+  , aloc  :: Loc        -- List x xs -> exp
+  } deriving (Show)
 
 data Exp
   = EPrim Prim Loc                 -- 10
@@ -51,7 +69,7 @@ data Type
   deriving (Show)
 
 instance Locate Data where
-  loc (Data _ _ _ l) = l
+  loc (Data _ _ l) = l
 
 instance Locate Variant where
   loc (Variant _ _ l) = l

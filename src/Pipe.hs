@@ -10,9 +10,11 @@ import Backend.Backend
 import Backend.BackendCpp
 import Backend.BackendEval
 import qualified Parser.Pretty as PP
-import qualified Parser.AST as PA
+import qualified Parser.AST as AST
 import qualified Parser.Parser as PP
 import qualified IR.IR as IR
+import qualified IR.Convert as C
+import qualified Data.Map.Strict as M
 import Control.Monad
 import Control.Monad.Trans
 
@@ -25,7 +27,7 @@ pipe fs = do
   u  <- check $ genUnit ms
   checkb $ backend u
 
-parse :: [File] -> RIO (Maybe [PA.Module])
+parse :: [File] -> RIO (Maybe [AST.Module])
 parse fs = sequence <$> (forM fs $ \f -> do
   c <- liftIO $ readFile f
   let r = PP.parse (map (\sl -> if sl == '/' then '.' else sl) f) c
@@ -34,5 +36,11 @@ parse fs = sequence <$> (forM fs $ \f -> do
     Right ast -> return $ Just ast)
 
 
-genUnit :: [PA.Module] -> RIO (Maybe IR.Unit)
-genUnit ms = return $ Just undefined
+-- todo fix
+genUnit :: [AST.Module] -> RIO (Maybe IR.Unit)
+genUnit ms = return $ Just $ IR.Unit 
+  { IR.uns   = M.fromList [("main", 1)]
+  , IR.umods = M.fromList $ map (\m' -> (2, m')) ims
+  }
+  where ims = map (\m -> case C.convert 0 m of 
+                          Left m' -> m') ms

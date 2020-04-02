@@ -23,8 +23,8 @@ instance Pretty Module where
       Right d -> pp d) ts)
 
 instance Pretty Data where
-  pp (Data n ns vs _) =
-      "data" <+> (text n) <+> (hsep $ map text ns)
+  pp (Data n vs _) =
+      "data" <+> (text n) 
       $$ (nest 2 $ vcat $ map (pp) vs)
 
 instance Pretty Comb where

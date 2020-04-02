@@ -1,7 +1,7 @@
 module IR.IR where
 
 import qualified Parser.AST as P
-import qualified Data.Map.Lazy as M
+import qualified Data.Map.Strict as M
 
 type Name
   = (Integer, Integer, Integer) -- (module, comb/data, id)
@@ -23,19 +23,30 @@ data Module
   } deriving (Show)
 
 data Data
-  = Data Name Variant
-  deriving (Show)
+  = Data 
+  { dname :: Name 
+  , dvars :: [Variant]
+  } deriving (Show)
 
 data Variant
-  = Variant Name [Type]
-  deriving (Show)
+  = Variant 
+  { vname  :: Name 
+  , vtypes :: [Type]
+  } deriving (Show)
 
 data Comb
-  = Comb Name [Name] Type Exp
-  deriving (Show)
+  = Comb 
+  { cname :: Name 
+  , ctype :: Type  -- combinator doesn't have args as xexp is made up of lambdas
+  , cexp  :: Exp
+  } deriving (Show)
 
-type Alter
-  = (Name, [Name], Exp)        -- List x xs -> exp
+data Alter
+  = Alter
+  { acons :: Name 
+  , aargs :: [Name] 
+  , aexp  :: Exp
+  } deriving (Show)
 
 data Exp
   = EVar Name                  -- x
