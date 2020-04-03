@@ -66,6 +66,4 @@ data Prim
 data Type
   = TFn Type Type              -- Type -> Type
   | TPrim Name                 -- Bool
-  | TKind Type Type            -- Either Type Type
-  | TGen Name                  -- a
   deriving (Show)

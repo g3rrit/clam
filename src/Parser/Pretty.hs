@@ -57,6 +57,3 @@ instance Pretty Type where
   pp = \case
     TFn t0 t1 -> lparen <> (pp t0) <+> (text "->") <+> (pp t1) <> rparen
     TPrim n _ -> text n
-    TRef t -> lparen <+> (text "&") <+> pp t <+> rparen
-    TSptr t -> lparen <+> (text "*") <+> pp t <+> rparen
-    TUptr t -> lparen <+> (text "^") <+> pp t <+> rparen

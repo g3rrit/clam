@@ -1,4 +1,5 @@
 #include <functional>
+#include <memory>
 #include <iostream>
 
 template <class T>
@@ -67,9 +68,21 @@ std::function<std::function<int(int)>(A)> etest = [](A a) {
 	};
 };
 
+// -- if a lambda captures an unique ptr it also needs to become an unique ptr
+// let uptest p a : ^Int -> ^(Int -> Int)
+//   = p + a
+
+/*
+std::function<std::function<int(int)>(std::unique_ptr<int>)> uptest = [] (std::unique_ptr<int> p) {
+	return std::bind([] (std::unique_ptr<int> ps, int a) {
+		return *ps + a;
+	}, std::move(p));
+};
+*/
 
 int main() {
-	std::cout << bar(10)(20);
-	std::cout << etest(ConA_B(10))(10);
+	std::cout << bar(10)(20) << std::endl;
+	std::cout << etest(ConA_B(10))(10) << std::endl;
+	std::cout << uptest(std::move(std::make_unique<int>(1)))(2) << std::endl;
 	return 0;
 }

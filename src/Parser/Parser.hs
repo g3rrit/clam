@@ -163,10 +163,8 @@ parseAlter = tagLoc $ do
 
 parseType :: Parser Type
 parseType = E.buildExpressionParser
-  [ [ E.Prefix (TRef <$ (string "&")) ]
-  , [ E.Prefix (TSptr <$ (string "*")) ]
-  , [ E.Prefix (TUptr <$ (string "^")) ]
-  , [ E.Infix (TFn <$ (string "->")) E.AssocRight ]
+  [ 
+  [ E.Infix (TFn <$ (string "->")) E.AssocRight ]
   ] parseTType
   <?> "type"
 
@@ -174,9 +172,7 @@ parseTPrim :: Parser Type
 parseTPrim = tagLoc $ TPrim <$> uName
 
 parseBType = E.buildExpressionParser
-  [ [ E.Prefix (TRef <$ (string "&")) ]
-  , [ E.Prefix (TSptr <$ (string "*")) ]
-  , [ E.Prefix (TUptr <$ (string "^")) ]
+  [ 
   ] parseTType
   <?> "btype"
 

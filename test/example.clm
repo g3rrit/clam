@@ -6,7 +6,7 @@ let a a b : A
 data Bool = True | False
 
 data Pair
-  = Pair *Int A
+  = Pair Int A
 
 data Arrow = Arrow (A -> B -> C)
 

@@ -63,9 +63,6 @@ data Prim
 data Type
   = TFn Type Type                 -- Type -> Type
   | TPrim Name Loc                -- Bool
-  | TRef Type                  -- &Type
-  | TUptr Type                 -- ^Type
-  | TSptr Type                 -- *Type
   deriving (Show)
 
 instance Locate Data where
@@ -94,6 +91,3 @@ instance Locate Type where
   loc = \case
     TFn l r   -> (loc l) <> (loc r)
     TPrim _ l -> l
-    TRef t    -> loc t
-    TUptr t   -> loc t
-    TSptr t   -> loc t

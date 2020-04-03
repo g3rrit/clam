@@ -77,7 +77,7 @@ instance Codegen Module where
       write ";\n"
 
     -- gen fn forward decl
-    forM_ cs $ \(Comb n as ty _) -> do
+    forM_ cs $ \(Comb n ty _) -> do
       return ()
 
 

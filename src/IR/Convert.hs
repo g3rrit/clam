@@ -24,4 +24,4 @@ convertData :: AST.Data -> IR.Data
 convertData _ = IR.Data (0, 0, 0) [IR.Variant (1,1,1) []]
 
 convertComb :: AST.Comb -> IR.Comb
-convertComb _ = IR.Comb (2,2,2) [] (IR.TPrim (3,3,3)) (IR.EVar (4,4,4))
+convertComb _ = IR.Comb (2,2,2) (IR.TPrim (3,3,3)) (IR.EVar (4,4,4))
