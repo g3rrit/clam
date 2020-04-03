@@ -7,8 +7,6 @@ import Error.Print
 import Error.Error
 import Text.PrettyPrint
 import Backend.Backend
-import Backend.BackendCpp
-import Backend.BackendEval
 import qualified Parser.Pretty as PP
 import qualified Parser.AST as AST
 import qualified Parser.Parser as PP
@@ -22,7 +20,7 @@ pipe :: [File] -> RIO ()
 pipe fs = do
   ms <- check $ parse fs
   liftIO $ putStrLn $ "------ AST -----"
-  liftIO $ putStrLn $ concat $ map (render . PP.pretty) ms
+  liftIO $ putStrLn $ concatMap (render . PP.pretty) ms
   liftIO $ putStrLn $ "------ --- -----"
   u  <- check $ genUnit ms
   checkb $ backend u

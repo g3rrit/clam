@@ -55,6 +55,22 @@ std::function<std::function<int(int)>(A)> etest = [](A a) {
 
 		return 
 			( a
+			, ( 10
+			  , ( bar(10)(2) 
+			  	, ( f = [=] (int x) { return x * x; }
+				  , ( 0 ? 1 
+				  	  : ( a._type == A::B ? a.B_1 * 2 
+						  : (a._type == A::C ? 2 : undefined<int>())
+						)
+					)
+				  )
+				)
+			  )
+			);
+
+		/*
+		return 
+			( a
 			, 10
 			, bar(10)(2)
 			, f = [=](int x) { return x * x; }
@@ -65,6 +81,7 @@ std::function<std::function<int(int)>(A)> etest = [](A a) {
 				)
 		 	  )
 			);
+	 	*/
 	};
 };
 
@@ -83,6 +100,6 @@ std::function<std::function<int(int)>(std::unique_ptr<int>)> uptest = [] (std::u
 int main() {
 	std::cout << bar(10)(20) << std::endl;
 	std::cout << etest(ConA_B(10))(10) << std::endl;
-	std::cout << uptest(std::move(std::make_unique<int>(1)))(2) << std::endl;
+	// std::cout << uptest(std::move(std::make_unique<int>(1)))(2) << std::endl;
 	return 0;
 }

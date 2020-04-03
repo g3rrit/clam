@@ -41,23 +41,30 @@ data Comb
   , cexp  :: Exp
   } deriving (Show)
 
+data Exp
+  = EVar Name                  -- x
+  | EPrim Prim                 -- 10
+  | ESeq Exp Exp               -- exp ; exp
+  | EApp Exp Exp               -- fun <int, int>
+  | ELet Name Exp              -- Name : Type = Exp doesnt have type any as its just an assignment
+  | ELam Lambda                -- \ a -> exp
+  | EIf Exp Exp Exp            -- if a then b else if a then b else >> ;
+  | ECase Exp [Alter]          -- match a | alter | alter end
+  deriving (Show)
+
+data Lambda
+  = Lambda 
+  { larg :: Name 
+  , lvar :: [Comb]
+  , lexp :: Exp
+  } deriving (Show)
+
 data Alter
   = Alter
   { acons :: Name 
   , aargs :: [Name] 
   , aexp  :: Exp
   } deriving (Show)
-
-data Exp
-  = EVar Name                  -- x
-  | EPrim Prim                 -- 10
-  | ESeq Exp Exp               -- exp ; exp
-  | EApp Exp Exp               -- fun <int, int>
-  | ELet Name Type Exp         -- Name : Type = Exp
-  | ELam [Name] Exp            -- \ a b -> exp
-  | EIf Exp Exp Exp            -- if a then b else if a then b else >> ;
-  | ECase Exp [Alter]          -- match a | alter | alter end
-  deriving (Show)
 
 data Prim
   = PInt Int

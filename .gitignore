@@ -2,3 +2,5 @@
 clam.cabal
 *~
 .vscode
+a.out
+a.exe

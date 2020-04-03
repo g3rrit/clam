@@ -3,13 +3,13 @@
 module Backend.Backend where
 
 import Util
-import Backend.BackendCpp
-import Backend.BackendEval
+import qualified Backend.Cpp.Codegen as Cpp
+import qualified Backend.Eval.Eval as Eval
 import IR.IR
 
 backend :: Unit -> RIO Bool
 backend u = do
   c <- config cbackend
   case c of
-    BackendCpp -> backendCpp u
-    BackendEval -> backendEval u
+    BackendCpp -> Cpp.codegen u
+    BackendEval -> Eval.eval  u
