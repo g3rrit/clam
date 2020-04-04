@@ -14,10 +14,29 @@ data Module
   } deriving (Show)
 
 data Data
-  = Data 
-  { dname :: Name 
-  , dvars :: [Variant]
-  , dloc  :: Loc 
+  = SData SumData
+  | PData ProData
+  deriving (Show)
+
+data SumData
+  = SumData
+  { sname :: Name
+  , svars :: [ProData]
+  , sloc  :: Loc
+  } deriving (Show)
+
+data ProData
+  = ProData
+  { pname   :: Name
+  , pfields :: [Field] 
+  , ploc    :: Loc
+  } deriving (Show)
+
+data Field 
+  = Field 
+  { fname :: Either Name Integer
+  , ftype :: Type
+  , floc  :: Loc
   } deriving (Show)
 
 data Variant
@@ -66,7 +85,17 @@ data Type
   deriving (Show)
 
 instance Locate Data where
-  loc (Data _ _ l) = l
+  loc (SData s) = loc s
+  loc (PData p) = loc p
+
+instance Locate ProData where
+  loc (ProData _ _ l) = l
+
+instance Locate SumData where
+  loc (SumData _ _ l) = l
+
+instance Locate Field where
+  loc (Field _ _ l) = l
 
 instance Locate Variant where
   loc (Variant _ _ l) = l

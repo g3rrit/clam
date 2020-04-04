@@ -33,8 +33,8 @@ parseModule = do
   white
   string "mod"
   m  <- uName
-  dc <- (many $ (Left <$> (tagLoc parseComb))
-          <|> (Right <$> (tagLoc parseData)))
+  dc <- (many $ (Left <$> parseComb)
+          <|> (Right <$> parseData))
           <* P.eof
   return $ Module m dc
 
@@ -55,8 +55,8 @@ tagLoc p = do
 
 -- COMB
 
-parseComb :: Parser (Loc -> Comb)
-parseComb = do
+parseComb :: Parser Comb
+parseComb = tagLoc $ do
   try $ string "let"
   n  <- lName
   vs <- many lName
@@ -68,21 +68,60 @@ parseComb = do
 
 -- DATA
 
-parseData :: Parser (Loc -> Data)
-parseData = do
+
+parseData :: Parser Data
+parseData = (SData <$> parseSumData)
+          <|> (PData <$> parseProData)
+          <?> "data definition"
+
+parseSumData :: Parser SumData
+parseSumData = tagLoc $ do
   try $ string "data"
   n  <- uName
-  string "="
-  v  <- parseVariant
-  vs <- many $ string "|" *> parseVariant
-  return $ Data n (v:vs)
+  pd <- parseProDataEnv
+  pds <- many $ string "|" *> parseProDataEnv
+  return $ SumData n $ map (\(pn, pf, pl) -> ProData pn pf pl) (pd:pds)
 
-parseVariant :: Parser Variant
-parseVariant = tagLoc $ do
-  n  <- uName
-  ts <- many (try $ parseBType)
-  return $ Variant n ts
+parseProData :: Parser ProData
+parseProData = tagLoc $ do
+  try $ string "struct"
+  (n, fs, _) <- parseProDataEnv
+  return $ ProData n fs
 
+parseProDataEnv :: Parser (Name, [Field], Loc)
+parseProDataEnv = do
+  l0 <- getLoc
+  n <- uName
+  fs <- parseFields
+  l1 <- getLoc
+  return $ (n, fs, l0 <> l1)
+
+parseFields :: Parser [Field]
+parseFields = do
+  f <- try $ (parseFieldB 0 <|> parseFieldP 0)
+  fs <- manyWith $ \c -> (try $ parseFieldS c) <|> parseFieldB c
+  return (f:fs)
+
+parseFieldS :: Integer -> Parser Field
+parseFieldS c = string ";" >> ((parseFieldB c) <|> (parseFieldP c))
+
+parseFieldB :: Integer -> Parser Field
+parseFieldB c = bracket "(" (parseFieldP c) ")"
+
+parseFieldP :: Integer -> Parser Field
+parseFieldP c = tagLoc $
+  ( try $ 
+      ( do 
+          n <- lName
+          string ":"
+          t <- parseType
+          return $ Field (Left n) t
+      )
+  ) <|> ( do
+            t <- parseType
+            return $ Field (Right c) t
+        )
+  
 -- EXPRESSION
 
 parseUExp :: Parser Exp
@@ -186,9 +225,20 @@ parseTType = bracket "(" parseType ")"
 parsePrimInt :: Parser Prim
 parsePrimInt = PInt <$> integer
 
+-- UTIL
+
+manyWith :: (Integer -> Parser a) -> Parser [a]
+manyWith f = manyWith' f 1
+  where 
+    manyWith' g c = 
+      (try $ manyWith1' c g)
+      <|> return []
+    manyWith1' g c = 
+      (:) <$> (f c) <*> (manyWith' g (c + 1))
+
 -- LEXER
 
-reserved = [ "data", "let", "match", "end", "if", "then", "else"]
+reserved = [ "data", "struct", "let", "match", "end", "if", "then", "else"]
 
 satisfy :: Parser a -> (a -> Bool) -> Parser a
 satisfy p f = do

@@ -27,6 +27,16 @@ instance Pretty Data where
       "data" <+> (text n) 
       $$ (nest 2 $ vcat $ map (pp) vs)
 
+instance Pretty SumData where
+  pp (SumData n sv _) = (text "data") <+> (text n) 
+    $$ 
+
+instance Pretty ProData where
+  pp 
+
+instance Pretty Field where
+  pp (Field n t) = lparen <> (text n) <+> () <> rparen
+
 instance Pretty Comb where
   pp (Comb n ns t e _) =
       "let" <+> (text n) <+> (vcat $ map text ns) <+> colon <+> (pp t)

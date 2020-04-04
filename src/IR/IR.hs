@@ -27,11 +27,17 @@ data Module
   , mcomb  :: M.Map Name Comb
   } deriving (Show)
 
-data Data
-  = Data 
+data Type
+  =  
   { dname :: Name 
   , dvars :: [Variant]
   } deriving (Show)
+
+data SumType
+  = SumType [ProType]
+
+data ProType
+  = 
 
 data Variant
   = Variant 

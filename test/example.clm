@@ -57,3 +57,24 @@ let foo : IO
   = a := a b $ c d $ e f g
   ; if a $ b c then b c $ d e else f $ g h
   ; 10
+
+
+/*
+
+data A 
+  = A0 b : B     or A0 (b : B) (c : C)
+     ; c : C
+  | A1 Int Bool  -> A1 (0 : Int) (1 : Bool)
+
+struct B 
+  = a : Int 
+  ; b : Bool
+
+or 
+
+struct B
+  = (a : Int)
+    (b : Bool)
+
+
+*/
