@@ -11,20 +11,20 @@ T undefined() {
 
 // data A = B Int | C
 
-struct A {
+struct D0 {
 	enum {
-		B,
-		C
+		D1,
+		D2,
 	} _type;
 	union {
 		struct {
-			int B_1;
+			int D1_1;
 		};
 	};
 };
 
-std::function<A(int)> ConA_B = [](int a) {
-	return A { A::B , 10 };
+std::function<D0(int)> ConD_1 = [](int a) {
+	return D0 { D0::D1 , 10 };
 };
 
 // let foo a : Int -> Int = a + a
@@ -49,7 +49,7 @@ std::function<std::function<int(int)>(int)> bar = [](int  a) {
 //       B y -> y * 2
 //       C   -> 2
 
-std::function<std::function<int(int)>(A)> etest = [](A a) {
+std::function<std::function<int(int)>(D0)> etest = [](D0 a) {
 	return [=](int b) {
 		std::function<int(int)> f;
 
@@ -59,8 +59,8 @@ std::function<std::function<int(int)>(A)> etest = [](A a) {
 			  , ( bar(10)(2) 
 			  	, ( f = [=] (int x) { return x * x; }
 				  , ( 0 ? 1 
-				  	  : ( a._type == A::B ? a.B_1 * 2 
-						  : (a._type == A::C ? 2 : undefined<int>())
+				  	  : ( a._type == D0::D1 ? a.D1_1 * 2 
+						  : (a._type == D0::D2 ? 2 : undefined<int>())
 						)
 					)
 				  )
@@ -99,7 +99,7 @@ std::function<std::function<int(int)>(std::unique_ptr<int>)> uptest = [] (std::u
 
 int main() {
 	std::cout << bar(10)(20) << std::endl;
-	std::cout << etest(ConA_B(10))(10) << std::endl;
+	std::cout << etest(ConD_1(10))(10) << std::endl;
 	// std::cout << uptest(std::move(std::make_unique<int>(1)))(2) << std::endl;
 	return 0;
 }

@@ -6,6 +6,7 @@ module Backend.Cpp.Codegen where
 
 import Util
 import qualified Data.Map.Lazy as M
+import Data.List
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Except
@@ -67,6 +68,9 @@ class Codegen a where
 instance Codegen Name where
   cgen (m, d, i) = write $ "__" ++ (show m) ++ "_" ++ (show d) ++ "_" ++ (show i)
 
+instance Codegen VName where
+  cgen (m, d, i, v) = undefined
+
 instance Codegen Module where
   cgen m = do
     let ds = mdata m
@@ -82,52 +86,126 @@ instance Codegen Module where
       seminl
 
     -- gen fn forward decl
-    forM_ cs $ \(Comb n ty _) -> do
+    forM_ cs $ \(Comb n e) -> do
       write "extern "
-      cgen ty
+      cgen $ etype e
+      space
       cgen n
       seminl
 
     -- gen type def
-    forM_ ds $ \(Data n vs) -> do
-      write "struct "
-      cgen n
-      bracket "{" (cgen vs) "}"
-      seminl
+    forM_ ds cgen
 
     -- gen function def
-    forM_ cs $ \(Comb n ty exp) -> do
-      cgen ty
-      cgen n
-      eq
-      cgen exp
-      seminl
+    forM_ cs cgen
   
 
 instance Codegen Data where 
-  cgen d = undefined
+  cgen d = cgenDataDef d >> cgenDataCon d
 
-instance Codegen [Variant] where 
-  cgen vs = undefined
+cgenDataDef :: Data -> Env ()
+cgenDataDef d = do
+  let n  = dname d
+  let vs = dvars d
+  write "struct "
+  cgen n
+  space
+  bracket "{" 
+    ( do
+        newline
+        write "enum "
+        bracket "{" 
+          ( do
+              newline
+              forIn (comma >> newline) vs $ \v -> do
+                cgen $ vname v
+          ) "}"
+        write " _type"
+        seminl
+        write "union "
+        bracket "{"
+          ( do 
+              newline
+              forM_ vs $ \v -> do
+                write "struct "
+                bracket "{"
+                  ( do 
+                      newline
+                      forM_ (zip [1..] $ vtypes v) $ \(c, t) -> do
+                        cgen t
+                        space
+                        cgen $ vname v
+                        write $ "_" ++ show c
+                        seminl
+                  ) "}"
+                seminl
+          ) "}"
+        seminl
+    ) "}"
+  seminl
+  
+
+cgenDataCon :: Data -> Env ()
+cgenDataCon d = do
+  let n  = dname d
+  let vs = dvars d
+  write "// variant constructors for "
+  cgen n
+  newline
 
 instance Codegen Comb where 
-  cgen c = undefined
+  cgen c = do
+    let n = cname c
+    let t = ctype c
+    let e = cexp c
+    cgen t
+    space
+    cgen n
+    eq
+    cgen e
 
 instance Codegen Exp where 
-  cgen (EVar n) = cgen n >> space
-  cgen (EPrim p) = cgen p >> space
+  cgen (EVar n _) = cgen n
+  cgen (EPrim p) = cgen p
   cgen (ESeq e0 e1) = bracket "(" (cgen e0 >> comma >> cgen e1) ")"
   cgen (EApp e0 e1) = bracket "(" (cgen e0 >> bracket "(" (cgen e1) ")") ")"
   cgen (ELet n e) = bracket "(" (cgen n >> eq >> cgen e) ")"
   cgen (ELam l) = cgen l
   cgen (EIf c t f) = bracket "(" (cgen c >> colon >> cgen t >> qmark >> cgen f) ")"
-  cgen (ECase e as) = undefined
+  cgen (ECase e as) = write "//placeholer" >> newline
 
 instance Codegen Lambda where
-  cgen l = undefined
+  cgen l = do 
+    let arg = larg l
+    let aty = laty l
+    let fields = lfields l
+    let exp = lexp l
+    write "[=] "
+    bracket "(" 
+      ( do
+          cgen aty
+          space
+          cgen arg
+      ) ")"
+    space 
+    bracket "{"
+      ( do 
+          forM_ fields cgen
+          write "return "
+          cgen exp
+          seminl
+      ) "}"
+    seminl
+
+instance Codegen Field where
+  cgen f = do
+    cgen $ ftype f
+    space
+    cgen $ fname f
+    seminl
 
 instance Codegen Alter where 
-  cgen a = undefined
+  cgen a = write "//placeholer" >> newline
 
 instance Codegen Prim where 
   cgen (PInt i) = write $ show i
@@ -136,8 +214,7 @@ instance Codegen Type where
   cgen (TFn t0 t1) = do
     write $ "std::function"
     bracket "<" (cgen t1 >> bracket "(" (cgen t0) ")") ">"
-    space
-  cgen (TPrim n) = cgen n >> space
+  cgen (TPrim n) = cgen n
 
 
 
@@ -175,10 +252,10 @@ bracket :: String -> Env t -> String -> Env t
 bracket l e r = write l *> e <* write r
 
 semicolon :: Env ()
-semicolon = write ";"
+semicolon = write "; "
 
 comma :: Env ()
-comma = write ","
+comma = write ", "
 
 eq :: Env ()
 eq = write " = "
@@ -190,6 +267,9 @@ qmark :: Env ()
 qmark = write " ? "
 
 seminl = semicolon >> newline
+
+forIn :: Env t -> [a] -> (a -> Env t) -> Env ()
+forIn s t f = (sequence $ intersperse s $ map f t) >> return ()
 
 getMod :: Integer -> Env (Maybe Module)
 getMod i = do

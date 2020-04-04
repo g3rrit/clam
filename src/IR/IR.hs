@@ -1,10 +1,15 @@
+{-# LANGUAGE LambdaCase #-}
+
 module IR.IR where
 
 import qualified Parser.AST as P
 import qualified Data.Map.Strict as M
 
 type Name
-  = (Integer, Integer, Integer) -- (module, comb/data, id)
+   = (Integer, Integer, Integer) -- (module, comb/data, id)
+
+type VName
+  = (Integer, Integer, Integer, Integer) -- (module, comb/data, id, variant id)
 
 type Id
   = String
@@ -37,12 +42,11 @@ data Variant
 data Comb
   = Comb 
   { cname :: Name 
-  , ctype :: Type  -- combinator doesn't have args as xexp is made up of lambdas
   , cexp  :: Exp
   } deriving (Show)
 
 data Exp
-  = EVar Name                  -- x
+  = EVar VName Type            -- x
   | EPrim Prim                 -- 10
   | ESeq Exp Exp               -- exp ; exp
   | EApp Exp Exp               -- fun <int, int>
@@ -52,11 +56,19 @@ data Exp
   | ECase Exp [Alter]          -- match a | alter | alter end
   deriving (Show)
 
+-- allocation
+data Field  
+  = Field
+  { fname :: Name
+  , ftype :: Type
+  } deriving (Show)
+
 data Lambda
   = Lambda 
-  { larg :: Name 
-  , lvar :: [Comb]
-  , lexp :: Exp
+  { larg    :: Name 
+  , laty    :: Type
+  , lfields :: [Field]
+  , lexp    :: Exp
   } deriving (Show)
 
 data Alter
@@ -73,4 +85,32 @@ data Prim
 data Type
   = TFn Type Type              -- Type -> Type
   | TPrim Name                 -- Bool
-  deriving (Show)
+  deriving (Show, Eq)
+
+-- expression helper functions
+
+etype :: Exp -> Type
+etype = \case 
+  EVar _ t -> t
+  EPrim p -> eptype p
+  ESeq _ e -> etype e  
+  EApp f e -> case etype f of 
+    TFn te t -> if te /= (etype e) then undefined else t
+    _ -> undefined
+  ELet _ e -> etype e
+  ELam l -> ltype l
+  EIf _ t f -> let tt = etype t in if tt /= etype f then undefined else tt
+  ECase _ (a:_) -> atype a -- rework this
+ 
+eptype :: Prim -> Type
+eptype = \case
+  PInt _ -> TPrim (0, 0, 0)
+
+ltype :: Lambda -> Type
+ltype l = TFn (laty l) $ etype $ lexp l
+
+ctype :: Comb -> Type
+ctype c = etype $ cexp c
+
+atype :: Alter -> Type
+atype a = etype $ aexp a
