@@ -5,11 +5,12 @@ module IR.IR where
 import qualified Parser.AST as P
 import qualified Data.Map.Strict as M
 
-type Name
-   = (Integer, Integer, Integer) -- (module, comb/data, id)
+data Name
+   = Name Integer Integer Integer -- (module, comb/data, id)
+   deriving (Eq, Ord)
 
-type VName
-  = (Integer, Integer, Integer, Integer) -- (module, comb/data, id, variant id)
+instance Show Name where
+  show (Name m c i) = "__" ++ (show m) ++ "_" ++ (show c) ++ "_" ++ (show i)
 
 type Id
   = String
@@ -27,22 +28,33 @@ data Module
   , mcomb  :: M.Map Name Comb
   } deriving (Show)
 
-data Type
-  =  
-  { dname :: Name 
-  , dvars :: [Variant]
+data Data
+  = SData SumData
+  | PData ProData
+  deriving (Show)
+
+dname :: Data -> Name
+dname = \case
+  SData s -> sname s
+  PData p -> pname p
+
+data SumData
+  = SumData
+  { sname :: Name
+  , svars :: [ProData]
   } deriving (Show)
 
-data SumType
-  = SumType [ProType]
+data ProData
+  = ProData 
+  { pname :: Name
+  , pmem  :: [Member]
+  } deriving (Show)
 
-data ProType
-  = 
 
-data Variant
-  = Variant 
-  { vname  :: Name 
-  , vtypes :: [Type]
+data Member
+  = Member
+  { mindex :: Integer
+  , mtype  :: Type
   } deriving (Show)
 
 data Comb
@@ -52,14 +64,15 @@ data Comb
   } deriving (Show)
 
 data Exp
-  = EVar VName Type            -- x
+  = EVar Name Type            -- x
+  | ECon Name Type
   | EPrim Prim                 -- 10
   | ESeq Exp Exp               -- exp ; exp
   | EApp Exp Exp               -- fun <int, int>
   | ELet Name Exp              -- Name : Type = Exp doesnt have type any as its just an assignment
   | ELam Lambda                -- \ a -> exp
   | EIf Exp Exp Exp            -- if a then b else if a then b else >> ;
-  | ECase Exp [Alter]          -- match a | alter | alter end
+  | ECase Name Exp [Alter]          -- match a | alter | alter end -- needs to have name as assignment
   deriving (Show)
 
 -- allocation
@@ -80,8 +93,7 @@ data Lambda
 data Alter
   = Alter
   { acons :: Name 
-  , aargs :: [Name] 
-  , aexp  :: Exp
+  , alam  :: Lambda
   } deriving (Show)
 
 data Prim
@@ -106,11 +118,11 @@ etype = \case
   ELet _ e -> etype e
   ELam l -> ltype l
   EIf _ t f -> let tt = etype t in if tt /= etype f then undefined else tt
-  ECase _ (a:_) -> atype a -- rework this
+  ECase _ _ (a:_) -> atype a -- rework this
  
 eptype :: Prim -> Type
 eptype = \case
-  PInt _ -> TPrim (0, 0, 0)
+  PInt _ -> TPrim (Name 0 0 0)
 
 ltype :: Lambda -> Type
 ltype l = TFn (laty l) $ etype $ lexp l
@@ -119,4 +131,4 @@ ctype :: Comb -> Type
 ctype c = etype $ cexp c
 
 atype :: Alter -> Type
-atype a = etype $ aexp a
+atype a = etype $ lexp $ alam a

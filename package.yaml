@@ -32,7 +32,6 @@ dependencies:
 - pretty
 - process
 - directory
-- raw-strings-qq
 
 library:
   source-dirs: src

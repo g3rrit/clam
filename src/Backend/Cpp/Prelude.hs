@@ -1,11 +1,14 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Backend.Cpp.Prelude where
 
-import Text.RawString.QQ
+import Data.List
+import qualified IR.Builtin as BI
 
 prelude :: String
-prelude = [r|// prelude
-typedef int __0_0_0;
-// prelude
-|]
+prelude = intercalate nl $
+  [ "// prelude"
+  , "typedef int " ++ (show BI.int)
+  , "template <class T> T bottom() { exit(-1); }"
+  , "// prelude" ++ nl
+  ]
+
+nl = "\n"

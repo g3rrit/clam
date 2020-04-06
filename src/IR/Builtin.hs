@@ -8,3 +8,6 @@ base = Module
   , mdata = undefined
   , mcomb = undefined
   }
+
+int :: Name
+int = Name 0 0 0

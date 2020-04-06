@@ -59,22 +59,15 @@ let foo : IO
   ; 10
 
 
-/*
-
 data A 
-  = A0 b : B     or A0 (b : B) (c : C)
+  = A0 b : B     
      ; c : C
-  | A1 Int Bool  -> A1 (0 : Int) (1 : Bool)
+  | A1 Int Bool  
 
 struct B 
   = a : Int 
   ; b : Bool
 
-or 
-
 struct B
   = (a : Int)
     (b : Bool)
-
-
-*/

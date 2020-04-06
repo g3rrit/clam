@@ -27,16 +27,16 @@ data SumData
 
 data ProData
   = ProData
-  { pname   :: Name
-  , pfields :: [Field] 
-  , ploc    :: Loc
+  { pname :: Name
+  , pmem  :: [Member] 
+  , ploc  :: Loc
   } deriving (Show)
 
-data Field 
-  = Field 
-  { fname :: Either Name Integer
-  , ftype :: Type
-  , floc  :: Loc
+data Member 
+  = Member 
+  { mindex :: Either Name Integer
+  , mtype  :: Type
+  , mloc   :: Loc
   } deriving (Show)
 
 data Variant
@@ -94,8 +94,8 @@ instance Locate ProData where
 instance Locate SumData where
   loc (SumData _ _ l) = l
 
-instance Locate Field where
-  loc (Field _ _ l) = l
+instance Locate Member where
+  loc (Member _ _ l) = l
 
 instance Locate Variant where
   loc (Variant _ _ l) = l

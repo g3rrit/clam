@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Backend.Cpp.Codegen where
 
@@ -66,10 +67,7 @@ class Codegen a where
   cgen :: a -> Env ()
 
 instance Codegen Name where
-  cgen (m, d, i) = write $ "__" ++ (show m) ++ "_" ++ (show d) ++ "_" ++ (show i)
-
-instance Codegen VName where
-  cgen (m, d, i, v) = undefined
+  cgen n = write $ show n
 
 instance Codegen Module where
   cgen m = do
@@ -80,17 +78,17 @@ instance Codegen Module where
     write P.prelude
 
     -- gen type forward decl
-    forM_ ds $ \(Data n _) -> do
+    forM_ ds $ \ d -> do
       write "struct "
-      cgen n
+      cgen $ dname d
       seminl
 
     -- gen fn forward decl
-    forM_ cs $ \(Comb n e) -> do
+    forM_ cs $ \ c -> do
       write "extern "
-      cgen $ etype e
+      cgen $ etype $ cexp c
       space
-      cgen n
+      cgen $ cname c
       seminl
 
     -- gen type def
@@ -98,60 +96,93 @@ instance Codegen Module where
 
     -- gen function def
     forM_ cs cgen
+
+    newline
   
 
 instance Codegen Data where 
-  cgen d = cgenDataDef d >> cgenDataCon d
+  cgen = \case 
+    SData s -> cgen s
+    PData p -> cgen p
 
-cgenDataDef :: Data -> Env ()
-cgenDataDef d = do
-  let n  = dname d
-  let vs = dvars d
-  write "struct "
-  cgen n
+instance Codegen ProData where
+  cgen p = do
+    let n  = pname p
+    let ms = pmem p
+    write "struct"
+    bracket "{" (newline >> forIn seminl ms cgen) "}"
+    seminl
+    cgenDataCons n ms Nothing
+
+instance Codegen SumData where
+  cgen s = do
+    let n = sname s
+    let ps = svars s
+    write "struct"
+    cgen n
+    space
+    bracket "{" 
+      ( do
+          newline
+          write "enum "
+          bracket "{" 
+            ( do
+                newline
+                forIn (comma >> newline) ps $ \p -> cgen $ pname p
+            ) "}"
+          write " _type"
+          seminl
+          write "union "
+          bracket "{"
+            ( do 
+                newline
+                forM_ ps $ \ p -> do
+                  write "struct "
+                  bracket "{" (newline >> forIn seminl (pmem p) cgen) "}"
+                  seminl
+            ) "}"
+          seminl
+      ) "}"
+    seminl
+    forM_ ps $ \ p -> cgenDataCons (pname p) (pmem p) $ Just n
+ 
+cgenDataCons :: Name -> [Member] -> (Maybe Name) -> Env ()
+cgenDataCons n ms mt = do
+  let ty = (case mt of
+              Just t -> t
+              Nothing -> n)
+  cgen ty
   space
+  write "C_"
+  cgen n
+  eq
+  forM_ ms $ \ m -> do
+    write "[]"
+    space 
+    bracket "(" (cgen m) ")"
+    space
+    write "{"
+    newline
+    write "return"
+    space
+
+  cgen ty 
   bracket "{" 
-    ( do
-        newline
-        write "enum "
-        bracket "{" 
-          ( do
-              newline
-              forIn (comma >> newline) vs $ \v -> do
-                cgen $ vname v
-          ) "}"
-        write " _type"
-        seminl
-        write "union "
-        bracket "{"
-          ( do 
-              newline
-              forM_ vs $ \v -> do
-                write "struct "
-                bracket "{"
-                  ( do 
-                      newline
-                      forM_ (zip [1..] $ vtypes v) $ \(c, t) -> do
-                        cgen t
-                        space
-                        cgen $ vname v
-                        write $ "_" ++ show c
-                        seminl
-                  ) "}"
-                seminl
-          ) "}"
-        seminl
+    ( do 
+        forIn comma ms $ \ m -> 
+          let mi = mindex m in write $ "." ++ (show mi) ++ " = " ++ (show mi)
     ) "}"
   seminl
-  
 
-cgenDataCon :: Data -> Env ()
-cgenDataCon d = do
-  let n  = dname d
-  let vs = dvars d
-  write "// variant constructors for "
-  cgen n
-  newline
+  forM_ ms $ \ _ -> write "}" >> seminl
+
+instance Codegen Member where
+  cgen m = do
+    let ty = mtype m
+    let i  = mindex m
+    cgen ty
+    space
+    write $ show i
 
 instance Codegen Comb where 
   cgen c = do
@@ -163,16 +194,53 @@ instance Codegen Comb where
     cgen n
     eq
     cgen e
+    seminl
 
 instance Codegen Exp where 
   cgen (EVar n _) = cgen n
+  cgen (ECon n _) = write "C_" >> cgen n
   cgen (EPrim p) = cgen p
   cgen (ESeq e0 e1) = bracket "(" (cgen e0 >> comma >> cgen e1) ")"
   cgen (EApp e0 e1) = bracket "(" (cgen e0 >> bracket "(" (cgen e1) ")") ")"
   cgen (ELet n e) = bracket "(" (cgen n >> eq >> cgen e) ")"
   cgen (ELam l) = cgen l
   cgen (EIf c t f) = bracket "(" (cgen c >> colon >> cgen t >> qmark >> cgen f) ")"
-  cgen (ECase e as) = write "//placeholer" >> newline
+  cgen (ECase n e as) = do
+    bracket "(" 
+      ( do
+          bracket "(" (cgen n >> eq >> cgen e) ")"
+          comma
+          cgenAlter n (etype e) as
+      ) ")"
+
+cgenAlter :: Name -> Type -> [Alter] -> Env ()
+cgenAlter n t [] = bottom t
+cgenAlter n t (a:as) = do
+  let an = acons a
+  bracket "(" 
+    ( do 
+        cgen n
+        write "._type == "
+        case t of
+          TFn _ _ -> error "unable to pattern match function"
+          TPrim tn -> cgen tn
+        write "::"
+        cgen an
+        write " ? "
+        bracket "(" 
+          ( do
+              cgen $ alam a
+              bracket "(" (cgen n >> write ".V_" >> cgen an) ")"
+          ) ")"
+        write " : "
+        cgenAlter n t as
+    ) ")"
+
+bottom :: Type -> Env ()
+bottom t = do 
+  write "undefined"
+  bracket "<" (cgen t) ">"
+  write "()"
 
 instance Codegen Lambda where
   cgen l = do 
@@ -180,7 +248,8 @@ instance Codegen Lambda where
     let aty = laty l
     let fields = lfields l
     let exp = lexp l
-    write "[=] "
+    write "[]"
+    space
     bracket "(" 
       ( do
           cgen aty
@@ -195,7 +264,6 @@ instance Codegen Lambda where
           cgen exp
           seminl
       ) "}"
-    seminl
 
 instance Codegen Field where
   cgen f = do
@@ -203,9 +271,6 @@ instance Codegen Field where
     space
     cgen $ fname f
     seminl
-
-instance Codegen Alter where 
-  cgen a = write "//placeholer" >> newline
 
 instance Codegen Prim where 
   cgen (PInt i) = write $ show i
@@ -215,7 +280,6 @@ instance Codegen Type where
     write $ "std::function"
     bracket "<" (cgen t1 >> bracket "(" (cgen t0) ")") ">"
   cgen (TPrim n) = cgen n
-
 
 
 cgenMain :: Env ()

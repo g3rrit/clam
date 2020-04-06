@@ -78,6 +78,7 @@ parseSumData :: Parser SumData
 parseSumData = tagLoc $ do
   try $ string "data"
   n  <- uName
+  string "="
   pd <- parseProDataEnv
   pds <- many $ string "|" *> parseProDataEnv
   return $ SumData n $ map (\(pn, pf, pl) -> ProData pn pf pl) (pd:pds)
@@ -85,42 +86,45 @@ parseSumData = tagLoc $ do
 parseProData :: Parser ProData
 parseProData = tagLoc $ do
   try $ string "struct"
-  (n, fs, _) <- parseProDataEnv
+  n <- uName 
+  string "="
+  fs <- parseMembers
   return $ ProData n fs
 
-parseProDataEnv :: Parser (Name, [Field], Loc)
+parseProDataEnv :: Parser (Name, [Member], Loc)
 parseProDataEnv = do
   l0 <- getLoc
   n <- uName
-  fs <- parseFields
+  fs <- parseMembers
   l1 <- getLoc
   return $ (n, fs, l0 <> l1)
 
-parseFields :: Parser [Field]
-parseFields = do
-  f <- try $ (parseFieldB 0 <|> parseFieldP 0)
-  fs <- manyWith $ \c -> (try $ parseFieldS c) <|> parseFieldB c
-  return (f:fs)
+parseMembers :: Parser [Member]
+parseMembers = do
+  f <- CB.optionMaybe $ try (parseMemberB 0 <|> parseMemberP 0)
+  case f of 
+    Nothing -> return []
+    Just f' -> (f':) <$> (manyWith $ \c -> (try $ parseMemberS c) <|> (try $ parseMemberB c) <|> parseMemberC c)
 
-parseFieldS :: Integer -> Parser Field
-parseFieldS c = string ";" >> ((parseFieldB c) <|> (parseFieldP c))
+parseMemberS :: Integer -> Parser Member
+parseMemberS c = string ";" >> ((parseMemberB c) <|> (parseMemberP c))
 
-parseFieldB :: Integer -> Parser Field
-parseFieldB c = bracket "(" (parseFieldP c) ")"
+parseMemberB :: Integer -> Parser Member
+parseMemberB c = bracket "(" (parseMemberP c) ")"
 
-parseFieldP :: Integer -> Parser Field
-parseFieldP c = tagLoc $
-  ( try $ 
+parseMemberC :: Integer -> Parser Member
+parseMemberC c = tagLoc $ Member (Right c) <$> parseType
+
+parseMemberP :: Integer -> Parser Member
+parseMemberP c =
+  ( try $ tagLoc
       ( do 
           n <- lName
           string ":"
           t <- parseType
-          return $ Field (Left n) t
+          return $ Member (Left n) t
       )
-  ) <|> ( do
-            t <- parseType
-            return $ Field (Right c) t
-        )
+  ) <|> (parseMemberC c)
   
 -- EXPRESSION
 
@@ -228,13 +232,12 @@ parsePrimInt = PInt <$> integer
 -- UTIL
 
 manyWith :: (Integer -> Parser a) -> Parser [a]
-manyWith f = manyWith' f 1
+manyWith f = manyWith' 1
   where 
-    manyWith' g c = 
-      (try $ manyWith1' c g)
-      <|> return []
-    manyWith1' g c = 
-      (:) <$> (f c) <*> (manyWith' g (c + 1))
+    manyWith' c = 
+      (try $ manyWith1' c) <|> return []
+    manyWith1' c = 
+      (:) <$> (f c) <*> (manyWith' $ c + 1)
 
 -- LEXER
 

@@ -23,19 +23,19 @@ instance Pretty Module where
       Right d -> pp d) ts)
 
 instance Pretty Data where
-  pp (Data n vs _) =
-      "data" <+> (text n) 
-      $$ (nest 2 $ vcat $ map (pp) vs)
+  pp (SData s) = pp s
+  pp (PData p) = pp p
 
 instance Pretty SumData where
   pp (SumData n sv _) = (text "data") <+> (text n) 
-    $$ 
+    $$ (nest 2 $ vcat $ map pp sv)
 
 instance Pretty ProData where
-  pp 
+  pp (ProData n fs _) = (text "struct") <+> (text n)
+    $$ (nest 2 $ vcat $ map pp fs)
 
-instance Pretty Field where
-  pp (Field n t) = lparen <> (text n) <+> () <> rparen
+instance Pretty Member where
+  pp (Member n t _) = lparen <> (case n of { Left c -> text c; Right i -> integer i})  <+> (text  " : ") <+> (pp t) <> rparen
 
 instance Pretty Comb where
   pp (Comb n ns t e _) =

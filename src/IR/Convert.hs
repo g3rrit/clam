@@ -21,7 +21,7 @@ convert id m = Left $ IR.Module
 -- TODO
 
 convertData :: AST.Data -> IR.Data
-convertData _ = IR.Data (5, 5, 5) [IR.Variant (1,1,1) []]
+convertData _ = IR.SData $ IR.SumData (IR.Name 2 2 2) [IR.ProData (IR.Name 3 3 3) [IR.Member 0 $ IR.TPrim (IR.Name 1 1 1)]]
 
 convertComb :: AST.Comb -> IR.Comb
-convertComb _ = IR.Comb (2,2,2) (IR.EVar (4,4,4,4) (IR.TPrim (3,3,3))) 
+convertComb _ = IR.Comb (IR.Name 2 2 2) (IR.EVar (IR.Name 4 4 4) (IR.TPrim (IR.Name 3 3 3))) 
