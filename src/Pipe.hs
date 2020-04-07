@@ -3,7 +3,6 @@
 module Pipe where
 
 import Util
-import Error.Print
 import Error.Error
 import Text.PrettyPrint
 import Backend.Backend
@@ -18,24 +17,20 @@ import Control.Monad.Trans
 
 pipe :: [File] -> RIO ()
 pipe fs = do
-  ms <- check $ parse fs
+  ms <- (check <$> parse fs) -- todo
   liftIO $ putStrLn $ "------ AST -----"
   liftIO $ putStrLn $ concatMap (render . PP.pretty) ms
   liftIO $ putStrLn $ "------ --- -----"
   u  <- check $ genUnit ms
-  checkb $ backend u
+  check $ backend u
 
-parse :: [File] -> RIO (Maybe [AST.Module])
+parse :: [File] -> RIO [EitherError AST.Module]
 parse fs = sequence <$> (forM fs $ \f -> do
   c <- liftIO $ readFile f
-  let r = PP.parse (map (\sl -> if sl == '/' then '.' else sl) f) c
-  case r of
-    Left (PP.PError p e) -> (liftIO $ printError f p ParserError e) >> return Nothing
-    Right ast -> return $ Just ast)
-
+  return $ PP.parse (map (\sl -> if sl == '/' then '.' else sl) f) c
 
 -- todo fix
-genUnit :: [AST.Module] -> RIO (Maybe IR.Unit)
+genUnit :: [AST.Module] -> RIO (EitherError IR.Unit)
 genUnit ms = return $ Just $ IR.Unit 
   { IR.uns   = M.fromList [("main", 1)]
   , IR.umods = M.fromList $ map (\m' -> (2, m')) ims

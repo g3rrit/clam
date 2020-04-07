@@ -2,7 +2,7 @@ module Parser.Parser where
 
 import Parser.AST
 
-import Error.Print
+import Error.Error
 import Data.Char
 import Text.Parsec ((<|>), (<?>), try, many, many1, sepBy)
 import qualified Text.Parsec as P
@@ -13,16 +13,14 @@ import qualified Text.Parsec.Error as ER
 
 type Parser = P.Parsec String ()
 
-data PError = PError Loc String
-
-parse :: String -> String -> Either PError Module
+parse :: String -> String -> EitherError Module
 parse file input =
   case P.runParser parseModule () file input of
     Left err -> Left $ let epos = P.errorPos err
                            spos = (P.sourceLine epos, P.sourceColumn epos)
                            sloc = Loc spos spos
-                       in PError sloc
-                            $ showErrorMessages $ ER.errorMessages err
+                       in Error ParserError file
+                            (showErrorMessages $ ER.errorMessages err) sloc
     Right tl -> Right tl
 
 showErrorMessages ms =

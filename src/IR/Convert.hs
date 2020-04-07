@@ -4,10 +4,7 @@ import qualified Parser.AST as AST
 import qualified IR.IR as IR
 import qualified Data.Map.Strict as M
 import Data.Either
-import Error.Print
-
-data ConvertError 
-  = ConvertError String Loc
+import Error
 
 convert :: Integer -> AST.Module -> Either IR.Module ConvertError
 convert id m = Left $ IR.Module 
