@@ -2,6 +2,7 @@ module Parser.Parser where
 
 import Parser.AST
 
+import Util
 import Error.Error
 import Data.Char
 import Text.Parsec ((<|>), (<?>), try, many, many1, sepBy)
@@ -13,9 +14,9 @@ import qualified Text.Parsec.Error as ER
 
 type Parser = P.Parsec String ()
 
-parse :: String -> String -> EitherError Module
+parse :: File -> String -> EitherError Module
 parse file input =
-  case P.runParser parseModule () file input of
+  case P.runParser (parseModule file) () (toPath file) input of
     Left err -> Left $ let epos = P.errorPos err
                            spos = (P.sourceLine epos, P.sourceColumn epos)
                            sloc = Loc spos spos
@@ -23,18 +24,18 @@ parse file input =
                             (showErrorMessages $ ER.errorMessages err) sloc
     Right tl -> Right tl
 
-showErrorMessages ms =
-  ER.showErrorMessages "or" "unknown" "expecting" "unexpected" "end of input" ms
+showErrorMessages =
+  ER.showErrorMessages "or" "unknown" "expecting" "unexpected" "end of input" 
 
-parseModule :: Parser Module
-parseModule = do
+parseModule :: File -> Parser Module
+parseModule f = do
   white
   string "mod"
   m  <- uName
   dc <- (many $ (Left <$> parseComb)
           <|> (Right <$> parseData))
           <* P.eof
-  return $ Module m dc
+  return $ Module f m dc
 
 -- UTIL
 

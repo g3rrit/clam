@@ -1,4 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Error.Error where
 
@@ -26,7 +29,7 @@ instance Semigroup Loc where
 data Error
   = Error 
   { errType :: ErrorType 
-  , errFile :: String 
+  , errFile :: File 
   , errMsg  :: String 
   , errLoc  :: Loc
   }  
@@ -41,28 +44,34 @@ type MaybeError
   = Maybe Error
 
 type EitherError a
-  = Either a Error
+  = Either Error a
 
 type BoolError
   = Bool
 
-class Checkable a where
-  check :: RIO a -> RIO b
+class Checkable a b where
+  check :: a -> RIO b
 
-instance Checkable MaybeError where
-  check a = a >>= \ a' -> case a' of
+instance Checkable MaybeError () where
+  check = \case
     Just e -> exitError e
-    Nothing -> return ()
+    Nothing -> return () 
 
-instance Checkable EitherError where
-  check a = a >>= \ a' -> case a' of
+instance Checkable (EitherError a) a where
+  check = \case
     Left e -> exitError e
     Right a -> return a
 
-instance Checkable BoolError where
-  check a = a >>= \ a' -> case a' of
+instance Checkable BoolError () where
+  check = \case
     True -> return ()
     False -> liftIO $ exitFailure
+
+instance Checkable a b => Checkable (RIO a) b where
+  check a = a >>= check
+
+instance (Checkable a b, Traversable t) => Checkable (RIO (t a)) (t b) where
+  check mas = mas >>= (traverse check)
 
 exitError :: Error -> RIO a
 exitError e = do
@@ -71,7 +80,7 @@ exitError e = do
 
 printError :: Error -> IO ()
 printError err = do
-  let src = errFile err
+  let src = toPath $ errFile err
   let l   = errLoc err
   let t   = errType err
   let msg = errMsg err
@@ -102,14 +111,6 @@ seekLines s e h = seekLines' s e h []
 
 
 -- UTIL
-check :: RIO (Maybe a) -> RIO a
-check a = a >>= (maybe (liftIO exitFailure) return)
-
-checkb :: RIO Bool -> RIO ()
-checkb a = a >>= \a' ->
-  if a' then return ()
-  else liftIO exitFailure
-
 panic :: String -> RIO a
 panic msg = do
   liftIO $ putStrLn $ "COMPILER ERROR | " ++ msg

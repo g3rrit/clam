@@ -4,28 +4,21 @@ module IR.IR where
 
 import qualified Parser.AST as P
 import qualified Data.Map.Strict as M
-
-data Name
-   = Name Integer Integer Integer -- (module, comb/data, id)
-   deriving (Eq, Ord)
-
-instance Show Name where
-  show (Name m c i) = "__" ++ (show m) ++ "_" ++ (show c) ++ "_" ++ (show i)
-
-type Id
-  = String
+import IR.Namespace
 
 data Unit
   = Unit
-  { uns   :: M.Map Id Integer
-  , umods :: M.Map Integer Module
+  { uns       :: M.Map Id Integer
+  , umods     :: M.Map Integer Module
   } deriving (Show)
 
 data Module
   = Module
-  { mid    :: Integer
-  , mdata  :: M.Map Name Data
-  , mcomb  :: M.Map Name Comb
+  { mid     :: Integer
+  , mdatans :: Namespace ()
+  , mcombns :: Namespace ()
+  , mdata   :: M.Map Name Data
+  , mcomb   :: M.Map Name Comb
   } deriving (Show)
 
 data Data

@@ -14,10 +14,10 @@ class Pretty t where
   pp :: t -> Doc
 
 pretty :: Pretty t => t -> Doc
-pretty t = pp t
+pretty = pp
 
 instance Pretty Module where
-  pp (Module m ts) = (text "Module") <+> (text m) $$
+  pp (Module _ m ts) = (text "Module") <+> (text m) $$
     (vcat $ map (\case
       Left c  -> pp c
       Right d -> pp d) ts)

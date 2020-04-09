@@ -17,7 +17,7 @@ import Control.Monad.Trans
 
 pipe :: [File] -> RIO ()
 pipe fs = do
-  ms <- (check <$> parse fs) -- todo
+  ms <- (check $ parse fs) 
   liftIO $ putStrLn $ "------ AST -----"
   liftIO $ putStrLn $ concatMap (render . PP.pretty) ms
   liftIO $ putStrLn $ "------ --- -----"

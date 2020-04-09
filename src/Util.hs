@@ -2,9 +2,13 @@ module Util where
 
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans
+import Data.List
 
 type File
-  = String
+  = [String]
+
+toPath :: [String] -> String
+toPath = intercalate "/"
 
 data Config
   = Config 

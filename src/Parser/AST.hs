@@ -2,14 +2,16 @@
 
 module Parser.AST where
 
-import Error.Print
+import Util
+import Error.Error
 
 type Name
   = String
 
 data Module
   = Module 
-  { mname :: String 
+  { mfile :: File
+  , mname :: String              -- Data.List
   , ms    :: [Either Comb Data]
   } deriving (Show)
 
