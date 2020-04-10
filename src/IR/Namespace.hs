@@ -16,15 +16,15 @@ instance Show Name where
 type Id
   = String
 
-data Namespace a
-  = Namespace (M.Map Id (Name, a))
+data Namespace
+  = Namespace (M.Map Id Name)
   deriving (Show)
 
-class Searchable a b i where
-  search :: i -> a -> Maybe (Name, b)
+class Searchable a i where
+  search :: i -> a -> Maybe Name
 
-instance Searchable (Namespace a) a Id where
+instance Searchable Namespace Id where
   search i (Namespace m) = M.lookup i m
 
-instance (Foldable t, Searchable s a i) => Searchable (t s) a i where
+instance (Foldable t, Searchable s i) => Searchable (t s) i where
   search i ts = asum (map (search i) $ toList ts)

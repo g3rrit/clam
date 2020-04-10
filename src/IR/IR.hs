@@ -6,17 +6,20 @@ import qualified Parser.AST as P
 import qualified Data.Map.Strict as M
 import IR.Namespace
 
+type Uid 
+  = Integer
+
 data Unit
   = Unit
-  { uns       :: M.Map Id Integer
+  { uns       :: M.Map Id Uid
   , umods     :: M.Map Integer Module
   } deriving (Show)
 
 data Module
   = Module
   { mid     :: Integer
-  , mdatans :: Namespace ()
-  , mcombns :: Namespace ()
+  , mdatans :: Namespace
+  , mcombns :: Namespace
   , mdata   :: M.Map Name Data
   , mcomb   :: M.Map Name Comb
   } deriving (Show)
@@ -42,7 +45,6 @@ data ProData
   { pname :: Name
   , pmem  :: [Member]
   } deriving (Show)
-
 
 data Member
   = Member
@@ -125,3 +127,17 @@ ctype c = etype $ cexp c
 
 atype :: Alter -> Type
 atype a = etype $ lexp $ alam a
+
+-- UTIL
+
+ulookupData :: Uid -> Name -> Unit -> Maybe Data
+ulookupData i n u = M.lookup i (umods u) >>= mlookupData n 
+
+ulookupComb :: Uid -> Name -> Unit -> Maybe Comb
+ulookupComb i n u = M.lookup i (umods u) >>= mlookupComb n
+
+mlookupData :: Name -> Module -> Maybe Data
+mlookupData n m = M.lookup n (mdata m)
+
+mlookupComb :: Name -> Module -> Maybe Comb
+mlookupComb n m = M.lookup n (mcomb m)
