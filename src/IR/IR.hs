@@ -12,7 +12,7 @@ type Uid
 data Unit
   = Unit
   { uns       :: M.Map Id Uid
-  , umods     :: M.Map Integer Module
+  , umods     :: M.Map Uid Module
   } deriving (Show)
 
 data Module
@@ -20,6 +20,7 @@ data Module
   { mid     :: Integer
   , mdatans :: Namespace
   , mcombns :: Namespace
+  , mconsns :: Namespace
   , mdata   :: M.Map Name Data
   , mcomb   :: M.Map Name Comb
   } deriving (Show)
@@ -50,6 +51,15 @@ data Member
   = Member
   { mindex :: Integer
   , mtype  :: Type
+  } deriving (Show)
+
+-- this nodes does only appear when 
+-- searching for constructors with searchCons
+-- and is constructed from prodata
+data Cons
+  = Cons
+  { coname :: Name
+  , cotype :: Type
   } deriving (Show)
 
 data Comb
@@ -130,14 +140,57 @@ atype a = etype $ lexp $ alam a
 
 -- UTIL
 
-ulookupData :: Uid -> Name -> Unit -> Maybe Data
-ulookupData i n u = M.lookup i (umods u) >>= mlookupData n 
-
-ulookupComb :: Uid -> Name -> Unit -> Maybe Comb
-ulookupComb i n u = M.lookup i (umods u) >>= mlookupComb n
+mlookup :: Name -> Module -> (Module -> M.Map Name a) -> Maybe a
+mlookup n m f = M.lookup n (f m)
 
 mlookupData :: Name -> Module -> Maybe Data
-mlookupData n m = M.lookup n (mdata m)
+mlookupData n m = mlookup n m mdata
 
 mlookupComb :: Name -> Module -> Maybe Comb
-mlookupComb n m = M.lookup n (mcomb m)
+mlookupComb n m = mlookup n m mcomb
+
+mlookupCons :: Name -> Module -> Maybe Cons
+mlookupCons n m = mlookup n m mdata >>= \d ->
+  case d of 
+    SData _ -> Nothing
+    PData p -> Just $ Cons (pname p) $ foldr (\m b -> TFn (mtype m) b) (TPrim $ dname d) $ pmem p
+
+
+ulookup :: Uid -> Name -> Unit -> (Name -> Module -> Maybe a) -> Maybe a
+ulookup i n u f = M.lookup i (umods u) >>= \m -> f n m
+
+ulookupData :: Uid -> Name -> Unit -> Maybe Data
+ulookupData i n u = ulookup i n u mlookupData
+
+ulookupComb :: Uid -> Name -> Unit -> Maybe Comb
+ulookupComb i n u = ulookup i n u mlookupComb
+
+ulookupCons :: Uid -> Name -> Unit -> Maybe Cons
+ulookupCons i n u = ulookup i n u mlookupCons
+
+
+msearch :: Id -> Module -> (Module -> Namespace) -> (Name -> Module -> Maybe a) -> Maybe a
+msearch i m ns f = search i (ns m) >>= \n -> f n m 
+
+msearchData :: Id -> Module -> Maybe Data
+msearchData i m = msearch i m mdatans mlookupData
+
+msearchComb :: Id -> Module -> Maybe Comb
+msearchComb i m = msearch i m mcombns mlookupComb
+
+msearchCons :: Id -> Module -> Maybe Cons
+msearchCons i m = msearch i m mconsns mlookupCons
+
+
+usearch :: Id -> Id -> Unit -> (Module -> Namespace) -> (Name -> Module -> Maybe a) -> Maybe a
+usearch ui i u ns f = M.lookup ui (uns u) >>= \mi -> M.lookup mi (umods u) >>= \m -> msearch i m ns f
+
+usearchData :: Id -> Id -> Unit -> Maybe Data
+usearchData ui i u = usearch ui i u mdatans mlookupData
+
+usearchComb :: Id -> Id -> Unit -> Maybe Comb
+usearchComb ui i u = usearch ui i u mcombns mlookupComb
+
+usearchCons :: Id -> Id -> Unit -> Maybe Cons
+usearchCons ui i u = usearch ui i u mconsns mlookupCons
+
