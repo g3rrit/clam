@@ -43,8 +43,9 @@ data SumData
 
 data ProData
   = ProData 
-  { pname :: Name
-  , pmem  :: [Member]
+  { pname  :: Name
+  , pmem   :: [Member]
+  , pmemns :: M.Map String Uid
   } deriving (Show)
 
 data Member

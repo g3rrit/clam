@@ -41,13 +41,6 @@ data Member
   , mloc   :: Loc
   } deriving (Show)
 
-data Variant
-  = Variant 
-  { vname  :: Name 
-  , vtypes :: [Type] 
-  , vloc   :: Loc       -- List a (List a)
-  } deriving (Show)
-
 data Comb
   = Comb 
   { cname :: Name 
@@ -98,9 +91,6 @@ instance Locate SumData where
 
 instance Locate Member where
   loc (Member _ _ l) = l
-
-instance Locate Variant where
-  loc (Variant _ _ l) = l
 
 instance Locate Comb where
   loc (Comb _ _ _ _ l) = l
