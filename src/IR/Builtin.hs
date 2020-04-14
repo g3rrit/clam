@@ -1,6 +1,7 @@
 module IR.Builtin where
 
 import IR.IR
+import IR.Namespace
 
 base :: Module
 base = Module 

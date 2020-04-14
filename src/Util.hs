@@ -1,8 +1,16 @@
-module Util where
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-import Control.Monad.Trans.Reader
+module Util 
+  ( module Util
+  , module Control.Monad.IO.Class
+  ) where
+
+import qualified Control.Monad.Trans.Reader as R
 import Control.Monad.Trans
 import Data.List
+
+import Control.Monad.IO.Class
+import qualified Control.Monad.Reader.Class as RC
 
 type File
   = [String]
@@ -23,11 +31,13 @@ data Backend
   = BackendCpp
   | BackendEval
 
-type RIO 
-  = ReaderT Config IO
+newtype RIO a
+  = RIO 
+  { runReader :: R.ReaderT Config IO a
+  } deriving (Functor, Applicative, Monad, RC.MonadReader Config, MonadIO)
 
 run :: Config -> RIO a -> IO a 
-run c r = runReaderT r c
+run c r = R.runReaderT (runReader r) c
 
 config :: (Config -> b) -> RIO b
-config = reader
+config = RC.reader

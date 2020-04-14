@@ -1,1 +1,4 @@
-fix operator precedence of seq and par
+- convert codegen cpp monad stack to newtype
+- move module files out of folder Error/Error.hs -> Error.hs, Error
+- convert codegen to newtype
+- make Namespace a type synonym, so that one can still use M.insert etc.

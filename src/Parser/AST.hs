@@ -3,7 +3,7 @@
 module Parser.AST where
 
 import Util
-import Error.Error
+import Error
 
 type Name
   = String

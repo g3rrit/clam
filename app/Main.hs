@@ -1,10 +1,6 @@
 module Main where
 
 import Util
-import Error.Print
-import Text.PrettyPrint
-import Parser.Parser
-import Parser.Pretty
 import Pipe
 
 getConfig :: IO Config
@@ -20,5 +16,5 @@ main :: IO ()
 main = do
   c <- getConfig
   putStrLn $ "CLAM " ++ (cversion c)
-  run c $ pipe ["test/example.clm"]
+  run c $ pipe [["test","example.clm"]]
   putStrLn "Done!"

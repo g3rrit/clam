@@ -42,9 +42,6 @@ instance Pretty Comb where
       "let" <+> (text n) <+> (vcat $ map text ns) <+> colon <+> (pp t)
       $$ (nest 2 $ equals <+> (pp e))
 
-instance Pretty Variant where
-  pp (Variant n t _) = (text n) <+> (hsep $ map pp t)
-
 instance Pretty Alter where
   pp (Alter n ns e _) = (text "|") <+> (text n) <+> (hsep $ map text ns) <+> (text "->")
     <+> (pp e)

@@ -19,6 +19,7 @@ import System.Exit
 import Backend.Cpp.Prelude as P
 
 import IR.IR
+import IR.Namespace
 
 codegen :: Unit -> RIO Bool
 codegen unit = do

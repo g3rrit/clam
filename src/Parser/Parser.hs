@@ -3,7 +3,7 @@ module Parser.Parser where
 import Parser.AST
 
 import Util
-import Error.Error
+import Error
 import Data.Char
 import Text.Parsec ((<|>), (<?>), try, many, many1, sepBy)
 import qualified Text.Parsec as P
