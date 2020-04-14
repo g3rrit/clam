@@ -5,8 +5,8 @@ module Backend where
 import Util
 import qualified Backend.Cpp.Codegen as Cpp
 import qualified Backend.Eval.Eval as Eval
-import IR.IR
 import Error
+import IR.Types
 
 backend :: Unit -> RIO BoolError
 backend u = do

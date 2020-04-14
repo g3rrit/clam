@@ -1,3 +1,3 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module IR.Convert.Types where
+module IR.Convert.Typecheck where

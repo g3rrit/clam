@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Parser.AST where
+module AST.Types where
 
 import Util
 import Error

@@ -3,12 +3,12 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Parser.Pretty where
+module AST.Pretty where
 
 import Prelude hiding ((<>))
 import Text.PrettyPrint
 import Data.List (intersperse)
-import Parser.AST
+import AST.Types
 
 class Pretty t where
   pp :: t -> Doc

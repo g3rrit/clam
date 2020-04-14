@@ -1,6 +1,6 @@
-module Parser.Parser where
+module AST.Parser where
 
-import Parser.AST
+import AST.Types
 
 import Util
 import Error

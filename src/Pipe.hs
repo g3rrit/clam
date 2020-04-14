@@ -6,10 +6,10 @@ import Util
 import Error
 import Text.PrettyPrint
 import Backend
-import qualified Parser.Pretty as PP
-import qualified Parser.AST as AST
-import qualified Parser.Parser as PP
-import qualified IR.IR as IR
+import qualified AST.Pretty as PP
+import qualified AST.Types as AST
+import qualified AST.Parser as PP
+import qualified IR.Types as IR
 import qualified IR.Convert as C
 import qualified Data.Map.Strict as M
 import Control.Monad

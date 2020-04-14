@@ -2,8 +2,8 @@
 
 module IR.Convert.Names where
 
-import qualified Parser.AST as AST
-import qualified IR.IR as IR
+import qualified AST.Types as AST
+import qualified IR.Types as IR
 import qualified IR.Namespace as IR
 import qualified Data.Map.Strict as M
 import Data.Either

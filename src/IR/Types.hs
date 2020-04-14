@@ -1,8 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
-module IR.IR where
+module IR.Types where
 
-import qualified Parser.AST as P
 import qualified Data.Map.Strict as M
 import IR.Namespace
 
