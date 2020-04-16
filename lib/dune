@@ -1,0 +1,4 @@
+(library 
+    (name pipe)
+    (libraries base core_kernel)
+    (preprocess (pps ppx_jane)))
