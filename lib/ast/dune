@@ -1,0 +1,6 @@
+(ocamllex lexer)
+(menhir (modules parser))
+
+(library 
+    (name ast)
+    (libraries core std))

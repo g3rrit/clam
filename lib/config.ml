@@ -6,17 +6,17 @@ let version_patch = "0"
 let version 
     = String.concat "." [version_major; version_minor; version_patch]
 
-let cpp_compiler = ref "clang++"
-let cpp_compiler_set =
+let cc_comp = ref "clang++"
+let cc_comp_set =
     [ "clang++"; "g++" ]
-let set_cpp_compiler c 
-    = if List.exists (fun s -> c = s) cpp_compiler_set 
-      then cpp_compiler := c 
+let set_cc_comp c 
+    = if List.exists (fun s -> c = s) cc_comp_set 
+      then cc_comp := c 
       else (Stdio.printf "Invalid cpp compiler (%s)\n" c ; exit 0)
 
 let to_string ()
     = String.concat "\n"
     [ "CONFIG"
     ; "VERSION: " ^ version 
-    ; "C++ COMPILER: " ^  !cpp_compiler
+    ; "C++ COMPILER: " ^  !cc_comp
     ]

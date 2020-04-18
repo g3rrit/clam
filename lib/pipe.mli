@@ -1,6 +1,7 @@
 open Base
-open Util
+open Std
 
 module Config = Config
+module Std = Std
 
 val run : File.t list -> unit

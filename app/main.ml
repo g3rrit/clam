@@ -3,7 +3,7 @@ open Stdio
 
 let arg_spec
     = [ ( "-cpp"
-        , Arg.String (fun s -> Config.set_cpp_compiler s)
+        , Arg.String (fun s -> Config.set_cc_comp s)
         , "c++ compiler used"
         )
       ]
