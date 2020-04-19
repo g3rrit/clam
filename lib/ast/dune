@@ -3,4 +3,4 @@
 
 (library 
     (name ast)
-    (libraries core std))
+    (libraries base core std))

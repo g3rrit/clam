@@ -16,6 +16,8 @@
 
 %start <Types.Module.t> entry
 
+%type <Types.Comb.t> toplevel
+
 %%
 
 %inline ilist(X):
@@ -36,8 +38,18 @@ option(X):
     { o }
 
 entry:
-    | m = list(comb) { { comb = m } }
+    | m = list(toplevel); EOF { { comb = m } }
+
+toplevel:
+    | LET; n = ID; EQ; v = INT { { name = n; value = v } } 
+
+data:
+
+variant:
+
+record:
 
 comb:
-    | LET; n = ID; EQ; v = INT { { name = n; value = v } } 
+    | LET; n = ID;  
+
 
