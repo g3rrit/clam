@@ -28,28 +28,33 @@ let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 rule read =
   parse
-  | white    { read lexbuf }
-  | newline  { next_line lexbuf; read lexbuf }
+  | white     { read lexbuf }
+  | newline   { next_line lexbuf; read lexbuf }
 
   (* keywords *)
-  | "let"    { LET }
+  | "let"     { LET }
+  | "data"    { DATA }
+  | "struct"  { STRUCT }
 
   (* builtin operators *)
-  | '='      { EQ }
+  | '='       { EQ }
+  | '|'       { PIPE }
+  | ':'       { COLON }
+  | "->"      { ARROW }
 
-  | int      { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }
 
-  | id       { ID (Lexing.lexeme lexbuf) }
+  | id        { ID (Lexing.lexeme lexbuf) }
 
-  | '"'      { read_string (Buffer.create 17) lexbuf }
-  | '('      { LPAREN }
-  | ')'      { RPAREN }
-  | '{'      { LBRACE }
-  | '}'      { RBRACE }
-  | '['      { LBRACK }
-  | ']'      { RBRACK }
+  | '"'       { read_string (Buffer.create 17) lexbuf }
+  | '('       { LPAREN }
+  | ')'       { RPAREN }
+  | '{'       { LBRACE }
+  | '}'       { RBRACE }
+  | '['       { LBRACK }
+  | ']'       { RBRACK }
   | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
-  | eof      { EOF }
+  | eof       { EOF }
 
 
 and read_string buf =

@@ -8,7 +8,7 @@ end
 
 module Field = struct 
     type t = 
-        { name : string option
+        { name : string
         ; ty   : Type.t
         }
 end
@@ -17,10 +17,21 @@ module Exp = struct
     type prim = 
         | PInt of int
 
-    type t =
+    type alter =
+        { cons : string
+        ; arg  : string
+        ; clo  : t
+        }
+
+    and t =
         | App of t * t
         | Val of string
         | Prim of prim
+        | Lam of string list * t 
+        | If of t * t * t
+        | Case of t * alter list
+        | Let of string * Type.t option * t
+        | Seq of t * t
 end
 
 module Comb = struct 
