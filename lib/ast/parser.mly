@@ -19,22 +19,19 @@
 %token RBRACK
 %token EOF
 
-%{
-    open Types
-%}
 
-%start <Module.t> entry
+%start <Types.Module.t> entry
 
-%type <Toplevel.t> toplevel
-%type <Comb.t> comb
-%type <Data.t> data
-%type <Variant.t> variant
-%type <Record.t> record
-%type <Exp.t> exp
-%type <Exp.alter> alter
-%type <Exp.prim> prim
-%type <Field.t> field
-%type <Type.t> ttype
+%type <Types.Toplevel.t> toplevel
+%type <Types.Comb.t> comb
+%type <Types.Data.t> data
+%type <Types.Variant.t> variant
+%type <Types.Record.t> record
+%type <Types.Exp.t> exp
+%type <Types.Exp.alter> alter
+%type <Types.Exp.prim> prim
+%type <Types.Field.t> field
+%type <Types.Type.t> ttype
 
 
 %%
@@ -61,8 +58,8 @@ toplevel:
     | c = comb { Second c }
 
 data:
-    | v = variant { Data.Var v }
-    | r = record  { Data.Rec r }
+    | v = variant { Types.Data.Var v }
+    | r = record  { Types.Data.Rec r }
 
 variant:
     | STRUCT; n = ID { { name = n; var = [] } }
@@ -75,10 +72,10 @@ comb:
         { { name = n; args = []; ty = t; exp = e }} 
 
 prim:
-    | v = INT { Exp.PInt v }
+    | v = INT { Types.Exp.PInt v }
 
 exp:
-    | e = prim { Exp.Prim e }
+    | e = prim { Types.Exp.Prim e }
 
 alter:
     | PIPE; c = ID; a = ID; ARROW; e = exp; { {cons = c; arg = a; clo = e }}
@@ -87,6 +84,6 @@ field:
     | n = ID; COLON; t = ttype { { name = n; ty = t }}
 
 ttype:
-    | i = ID { Type.Prim i }
+    | i = ID { Types.Type.Prim i }
 
 
