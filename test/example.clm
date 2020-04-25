@@ -1,4 +1,11 @@
 
-let foo = 10
 
-let bar = 2
+let a : b = c
+
+struct foo
+    = name : string
+    ; val : int
+
+let foo : int = 10
+
+let bar : bool = 2

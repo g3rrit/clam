@@ -8,7 +8,8 @@ let next_line lexbuf =
   let pos = lexbuf.lex_curr_p in
   lexbuf.lex_curr_p <-
     { pos with pos_bol = lexbuf.lex_curr_pos;
-               pos_lnum = pos.pos_lnum + 1
+               pos_lnum = pos.pos_lnum + 1;
+               pos_cnum = 0;
     }
 
 }
@@ -40,6 +41,7 @@ rule read =
   | '='       { EQ }
   | '|'       { PIPE }
   | ':'       { COLON }
+  | ';'       { SEMICOLON }
   | "->"      { ARROW }
 
   | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }

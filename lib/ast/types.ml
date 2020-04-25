@@ -1,5 +1,7 @@
 open Base
 
+open Std
+
 module Type = struct 
     type t =
         | Prim of string
@@ -18,14 +20,14 @@ module Exp = struct
         | PInt of int
 
     type alter =
-        { cons : string
-        ; arg  : string
-        ; clo  : t
+        { con : string
+        ; arg : string
+        ; exp : t
         }
 
     and t =
         | App of t * t
-        | Val of string
+        | Ref of string
         | Prim of prim
         | Lam of string list * t 
         | If of t * t * t
@@ -46,14 +48,14 @@ end
 module Record = struct 
     type t =
         { name : string 
-        ; mem  : Field.t list
+        ; fs   : Field.t list
         }
 end
 
 module Variant = struct
     type t = 
         { name : string
-        ; var  : Record.t list
+        ; vars : Record.t list
         }
 end
 
@@ -69,6 +71,7 @@ end
  
 module Module = struct
     type t =
-        { tls : Toplevel.t list
+        { file : File.t
+        ; tls  : Toplevel.t list
         }
 end
