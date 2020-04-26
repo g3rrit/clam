@@ -35,7 +35,13 @@
 %type <Types.Field.t> p_field
 %type <Types.Type.t> p_type
 
+%nonassoc NON_FN_TY
+%nonassoc NON_EXP
+
 %right ARROW
+
+%left SEMICOLON
+
 
 %{
     let make_fn (l : Types.Type.t) (r : Types.Type.t) : Types.Type.t =
@@ -94,10 +100,11 @@ p_exp_s:
 p_exp_basic:
     | LPAREN; e = p_exp; RPAREN { e }
     | e = p_prim { Types.Exp.Prim e }
+    | i = ID; { Types.Exp.Ref i }
 
 p_exp:
     | e = p_exp_basic { e }
-    | f = p_exp_s; e = p_exp { f e }
+    | f = p_exp_s; e = p_exp { f e } %prec NON_EXP
 
 p_alter:
     | PIPE; c = ID; a = ID; ARROW; e = p_exp_basic; { {con = c; arg = a; exp = e }}
@@ -106,7 +113,7 @@ p_type_s:
     | l = p_type; ARROW { make_fn l }
 
 p_type:
-    | f = p_type_s; r = p_type { f r }
-    | i = ID; { Types.Type.Prim i }
+    | f = p_type_s; r = p_type { f r } %prec NON_FN_TY
+    | i = ID { Types.Type.Prim i }
 
 

@@ -16,7 +16,7 @@ let parse (file : File.t) : Module.t =
         begin
             let curr = lexbuf.Lexing.lex_curr_p in
             let lnum = curr.Lexing.pos_lnum in
-            let cnum = curr.Lexing.pos_cnum in
+            let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
             let tok  = Lexing.lexeme lexbuf in
             raise (Std.Error.(E 
                     { src = file
