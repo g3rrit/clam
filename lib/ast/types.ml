@@ -2,10 +2,34 @@ open Base
 
 open Std
 
+module type Show = sig 
+    type t
+    val to_string : t -> string
+end
+
+(* 
+let paren (type a) (module S : Show with type t = a) (v : a) =
+    "(" ^ (S.to_string v) ^ ")"
+*)
+
+let paren (s : string) : string =
+    "(" ^ s ^ ")"
+
+let brack (s : string) : string =
+    "{" ^ s ^ "}"
+
+let brace (s : string) : string =
+    "[" ^ s ^ "]"
+
 module Type = struct 
     type t =
         | Prim of string
         | Fn of t * t
+
+    let rec to_string = function
+        | Prim s -> s
+        | Fn (l, r) -> (to_string l) ^ " -> " ^ (to_string r) |> paren
+
 end
 
 module Field = struct 
@@ -13,6 +37,9 @@ module Field = struct
         { name : string
         ; ty   : Type.t
         }
+
+    let to_string (v : t) : string =
+        v.name ^ (Type.to_string v.ty)
 end
 
 module Exp = struct
@@ -29,11 +56,24 @@ module Exp = struct
         | App of t * t
         | Ref of string
         | Prim of prim
-        | Lam of string list * t 
+        | Lam of string list * t
         | If of t * t * t
         | Case of t * alter list
         | Let of string * Type.t option * t
         | Seq of t * t
+
+    let rec to_string = function
+        | App (l, r) -> ((to_string l) ^ (to_string r) |> paren)
+        | Ref s -> s
+        | Prim p -> 
+            match p with
+                | PInt i -> Int.to_string i
+        | Lam (ars, e) -> "\\" ^ (String.concat_map ~f:(fun s -> s ^ " ") ars)
+            ^ " -> " ^ (to_string e) |> paren
+        | If (_, _, _) -> "if"
+        | Case (_, _) -> "case"
+        | Let (n, mt, e) -> "let"
+        | Seq (l, r) -> (to_string l) ^ "\n; " ^ (to_string r) |> paren
 end
 
 module Comb = struct 

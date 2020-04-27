@@ -75,7 +75,7 @@ p_record:
     | STRUCT; n = ID; EQ; fs = p_record_fields { { name = n; fs = fs } }
 
 p_record_fields:
-    | fs = p_field { [fs] }
+    | fs = separated_list(SEMICOLON, p_field) { fs }
 
 p_field:
     | n = ID; COLON; t = p_type { { name = n; ty = t }}
@@ -113,7 +113,7 @@ p_type_s:
     | l = p_type; ARROW { make_fn l }
 
 p_type:
-    | f = p_type_s; r = p_type { f r } %prec NON_FN_TY
     | i = ID { Types.Type.Prim i }
+    | f = p_type_s; r = p_type { f r } %prec NON_FN_TY
 
 
