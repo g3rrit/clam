@@ -39,7 +39,7 @@ module Field = struct
         }
 
     let to_string (v : t) : string =
-        v.name ^ (Type.to_string v.ty)
+        v.name ^ " : " ^ (Type.to_string v.ty)
 end
 
 module Exp = struct
@@ -66,13 +66,14 @@ module Exp = struct
         | App (l, r) -> ((to_string l) ^ (to_string r) |> paren)
         | Ref s -> s
         | Prim p -> 
-            match p with
+            begin match p with
                 | PInt i -> Int.to_string i
-        | Lam (ars, e) -> "\\" ^ (String.concat_map ~f:(fun s -> s ^ " ") ars)
+            end
+        | Lam (ars, e) -> "\\" ^ (List.map ~f:(fun s -> s ^ " ") ars |> String.concat)
             ^ " -> " ^ (to_string e) |> paren
         | If (_, _, _) -> "if"
         | Case (_, _) -> "case"
-        | Let (n, mt, e) -> "let"
+        | Let (_, _, _) -> "let"
         | Seq (l, r) -> (to_string l) ^ "\n; " ^ (to_string r) |> paren
 end
 
@@ -83,6 +84,13 @@ module Comb = struct
         ; ty   : Type.t
         ; exp  : Exp.t
         }
+
+    let to_string (v : t) : string = 
+        "comb " ^ v.name 
+            ^ (List.map ~f:(fun f -> paren @@ Field.to_string f) v.args |> String.concat)
+            ^ " : " ^ (Type.to_string v.ty) 
+            ^ " = " ^ (Exp.to_string v.exp)
+            ^ "\nend_comb"
 end
 
 module Record = struct 
@@ -90,6 +98,11 @@ module Record = struct
         { name : string 
         ; fs   : Field.t list
         }
+
+    let to_string (v : t) : string =
+        "record " ^ v.name ^ " =\n"
+            ^ (List.map ~f:(fun f -> paren (Field.to_string f) ^ "\n") v.fs |> String.concat) 
+            ^ "end_record"
 end
 
 module Variant = struct
@@ -97,16 +110,29 @@ module Variant = struct
         { name : string
         ; vars : Record.t list
         }
+
+    let to_string (v : t) : string =
+        "variant " ^ v.name ^ " =\n"
+            ^ (List.map ~f:(fun r -> paren (Record.to_string r) ^ "\n") v.vars |> String.concat) 
+            ^ "end_variant"
 end
 
 module Data = struct
     type t =
         | Var of Variant.t
         | Rec of Record.t
+
+    let to_string = function
+        | Var v -> Variant.to_string v
+        | Rec r -> Record.to_string r
 end
 
 module Toplevel = struct 
     type t = (Data.t, Comb.t) Either.t
+
+    let to_string = function
+        | Either.First d -> Data.to_string d
+        | Either.Second c -> Comb.to_string c
 end
  
 module Module = struct
@@ -114,4 +140,9 @@ module Module = struct
         { file : File.t
         ; tls  : Toplevel.t list
         }
+
+    let to_string (v : t) : string =
+        "module " ^ (File.to_string v.file) ^ "\n"
+            ^ (List.map ~f:(fun tl -> (Toplevel.to_string tl) ^ "\n\n") v.tls |> String.concat)
+            ^ "end_module"
 end
