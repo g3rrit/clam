@@ -4,6 +4,12 @@ struct foo
     = name : string
     ; val : int
 
+data bar 
+    = A of b : int
+         ; c : string
+    | B 
+    | C of d : bool
+
 let foo : int = 10
 
 let bar : bool = 2

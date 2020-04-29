@@ -35,6 +35,7 @@ rule read =
   | "let"     { LET }
   | "data"    { DATA }
   | "struct"  { STRUCT }
+  | "of"      { OF }
 
   (* builtin operators *)
   | '='       { EQ }

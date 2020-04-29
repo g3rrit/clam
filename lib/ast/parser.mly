@@ -5,6 +5,7 @@
 %token LET
 %token DATA
 %token STRUCT
+%token OF
 
 %token EQ
 %token PIPE
@@ -69,7 +70,8 @@ p_variant:
     | DATA; n = ID; EQ; vs = separated_list(PIPE, p_variant_field) { { name = n; vars = vs } }
 
 p_variant_field:
-    | n = ID; vs = p_record_fields  { { name = n; fs = vs } }
+    | n = ID; OF; vs = p_record_fields  { { name = n; fs = vs } }
+    | n = ID; { { name = n; fs = [] } }
 
 p_record:
     | STRUCT; n = ID; EQ; fs = p_record_fields { { name = n; fs = fs } }

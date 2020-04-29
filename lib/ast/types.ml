@@ -70,10 +70,18 @@ module Exp = struct
                 | PInt i -> Int.to_string i
             end
         | Lam (ars, e) -> "\\" ^ (List.map ~f:(fun s -> s ^ " ") ars |> String.concat)
-            ^ " -> " ^ (to_string e) |> paren
-        | If (_, _, _) -> "if"
-        | Case (_, _) -> "case"
-        | Let (_, _, _) -> "let"
+                               ^ " -> " ^ (to_string e) |> paren
+        | If (c, l, r) -> "if " ^ (to_string c) 
+                                ^ "\nthen " ^ (to_string l)
+                                ^ "\nelse " ^ (to_string r)
+                                ^ "\nend_if"
+        | Case (e, ats) -> "match " ^ (to_string e) ^ " with"
+                                    ^ (List.map ~f:(fun a -> "\n | " ^ a.con ^ " " ^ a.arg 
+                                        ^ " -> " ^ (to_string a.exp)) ats |> String.concat)
+                                    ^ "\nend_match"
+        | Let (v, mt, e) -> "let " ^ v ^ " : " 
+                                   ^ (Option.value ~default:" _ " (Option.map ~f:(fun it -> Type.to_string it) mt))
+                                   ^ " = " ^ (to_string e)
         | Seq (l, r) -> (to_string l) ^ "\n; " ^ (to_string r) |> paren
 end
 

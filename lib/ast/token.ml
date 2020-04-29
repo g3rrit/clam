@@ -6,6 +6,9 @@ type t = [
 
     (* keywords *)
     | `LET
+    | `DATA
+    | `STRUCT
+    | `OF
 
     (* operators *)
     | `EQ_OP 
