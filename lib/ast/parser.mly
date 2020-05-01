@@ -38,6 +38,7 @@
 
 %nonassoc NON_FN_TY
 %nonassoc NON_EXP
+%left NON_APP
 
 %right ARROW
 
@@ -50,6 +51,9 @@
 
     let make_exp_app (l : Types.Exp.t) (r : Types.Exp.t) : Types.Exp.t =
         Types.Exp.App (l, r)
+
+    let make_exp_seq (l : Types.Exp.t) (r : Types.Exp.t) : Types.Exp.t =
+        Types.Exp.Seq (l, r)
 
 %}
 
@@ -97,7 +101,8 @@ p_prim:
     | v = INT { Types.Exp.PInt v }
 
 p_exp_s:
-    | e = p_exp; SEMICOLON; { make_exp_app e }
+    | e = p_exp; SEMICOLON; { make_exp_seq e }
+    | e = p_exp { make_exp_app e } %prec NON_APP
 
 p_exp_basic:
     | LPAREN; e = p_exp; RPAREN { e }
