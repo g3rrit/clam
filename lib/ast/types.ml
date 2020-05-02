@@ -45,6 +45,7 @@ end
 module Exp = struct
     type prim = 
         | PInt of int
+        | PString of string
 
     type alter =
         { con : string
@@ -63,11 +64,12 @@ module Exp = struct
         | Seq of t * t
 
     let rec to_string = function
-        | App (l, r) -> ((to_string l) ^ (to_string r) |> paren)
+        | App (l, r) -> ((to_string l) ^ " " ^ (to_string r) |> paren)
         | Ref s -> s
         | Prim p -> 
             begin match p with
                 | PInt i -> Int.to_string i
+                | PString s -> "\"" ^ s ^ "\""
             end
         | Lam (ars, e) -> "\\" ^ (List.map ~f:(fun s -> s ^ " ") ars |> String.concat)
                                ^ " -> " ^ (to_string e) |> paren

@@ -1,4 +1,5 @@
 
+(*
 type t = [
     | `ID of string
     | `INT of int
@@ -11,7 +12,11 @@ type t = [
     | `OF
 
     (* operators *)
-    | `EQ_OP 
+    | `EQ 
+    | `PIPE
+    | `SEMICOLON
+    | `DOLLAR
+    | `SPIPE
     | `OP of string
 
     (* parens *)
@@ -24,3 +29,4 @@ type t = [
 
     | `EOF
 ]
+*)

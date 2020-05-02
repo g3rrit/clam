@@ -1,4 +1,4 @@
-let a : b = c
+let a : b -> c -> d = e
 
 struct foo
     = name : string
@@ -10,6 +10,6 @@ data bar
     | B 
     | C of d : bool
 
-let foo : int = 10
+let foo : int = a 10; 2
 
 let bar : bool = 2

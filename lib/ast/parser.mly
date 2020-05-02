@@ -6,9 +6,17 @@
 %token DATA
 %token STRUCT
 %token OF
+%token IF
+%token THEN
+%token ELSE
+%token MATCH
+%token END
 
 %token EQ
 %token PIPE
+%token SPIPE
+%token DOLLAR
+%token BACKSLASH
 %token COLON
 %token SEMICOLON
 %token ARROW
@@ -30,32 +38,17 @@
 %type <Types.Variant.t> p_variant
 %type <Types.Record.t> p_record
 %type <Types.Record.t> p_variant_field
-%type <Types.Exp.t> p_exp
-%type <Types.Exp.alter> p_alter
-%type <Types.Exp.prim> p_prim
 %type <Types.Field.t> p_field
 %type <Types.Type.t> p_type
 
-%nonassoc NON_FN_TY
-%nonassoc NON_EXP
-%left NON_APP
-
-%right ARROW
-
-%left SEMICOLON
-
-
-%{
-    let make_fn (l : Types.Type.t) (r : Types.Type.t) : Types.Type.t =
-        Types.Type.Fn (l, r)
-
-    let make_exp_app (l : Types.Exp.t) (r : Types.Exp.t) : Types.Exp.t =
-        Types.Exp.App (l, r)
-
-    let make_exp_seq (l : Types.Exp.t) (r : Types.Exp.t) : Types.Exp.t =
-        Types.Exp.Seq (l, r)
-
-%}
+%type <Types.Exp.prim> p_prim
+%type <Types.Exp.alter> p_alter
+%type <Types.Exp.t> p_exp_basic
+%type <Types.Exp.t> p_exp_app
+%type <Types.Exp.t> p_exp_dollar
+%type <Types.Exp.t> p_exp_seq
+%type <Types.Exp.t> p_exp_spipe
+%type <Types.Exp.t> p_exp
 
 %%
 
@@ -97,30 +90,56 @@ p_comb_args:
     | ags = list(p_comb_arg) { ags }
     | a = p_field { [a] }
 
+p_type:
+    | i = ID; ARROW; r = p_type { Types.Type.Fn (Types.Type.Prim i, r) }
+    | i = ID { Types.Type.Prim i }
+
+(* EXPRESSION *)
+
 p_prim:
     | v = INT { Types.Exp.PInt v }
+    | s = STRING { Types.Exp.PString s }
 
-p_exp_s:
-    | e = p_exp; SEMICOLON; { make_exp_seq e }
-    | e = p_exp { make_exp_app e } %prec NON_APP
+p_alter:
+    | PIPE; c = ID; a = ID; ARROW; e = p_exp; { {con = c; arg = a; exp = e }}
 
 p_exp_basic:
     | LPAREN; e = p_exp; RPAREN { e }
     | e = p_prim { Types.Exp.Prim e }
     | i = ID; { Types.Exp.Ref i }
+    | MATCH; e = p_exp; ars = list(p_alter); END
+        { Types.Exp.Case (e, ars) }
+
+p_exp_app:
+    | l = p_exp_app; r = p_exp_basic { Types.Exp.App (l, r) }
+    | e = p_exp_basic { e }
+
+p_exp_spipe:
+    | l = p_exp_spipe; SPIPE; r = p_exp_app { Types.Exp.App (r, l) }
+    | e = p_exp_app { e }
+
+p_exp_dollar:
+    | l = p_exp_dollar; DOLLAR; r = p_exp_spipe { Types.Exp.App (l, r) }
+    | e = p_exp_spipe { e }
+
+p_exp_if:
+    | IF; c = p_exp; THEN; t = p_exp; ELSE; f = p_exp_if 
+        { Types.Exp.If (c, t, f) }
+    | e = p_exp_dollar { e }
+
+p_exp_lam:
+    | BACKSLASH; ars = list(ID); ARROW; e = p_exp_lam
+        { Types.Exp.Lam (ars, e) }
+    | e = p_exp_if { e } 
+
+p_exp_let:
+    | i = ID; COLON; t = p_type; EQ; e = p_exp_let
+        { Types.Exp.Let (i, Some t, e)}
+    | e = p_exp_lam { e }
+
+p_exp_seq:
+    | l = p_exp_seq; SEMICOLON; r = p_exp_let { Types.Exp.Seq (l, r) }
+    | e = p_exp_let { e }
 
 p_exp:
-    | e = p_exp_basic { e }
-    | f = p_exp_s; e = p_exp { f e } %prec NON_EXP
-
-p_alter:
-    | PIPE; c = ID; a = ID; ARROW; e = p_exp_basic; { {con = c; arg = a; exp = e }}
-
-p_type_s:
-    | l = p_type; ARROW { make_fn l }
-
-p_type:
-    | i = ID { Types.Type.Prim i }
-    | f = p_type_s; r = p_type { f r } %prec NON_FN_TY
-
-
+    | e = p_exp_seq { e }

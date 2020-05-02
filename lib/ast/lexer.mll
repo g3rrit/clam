@@ -36,13 +36,21 @@ rule read =
   | "data"    { DATA }
   | "struct"  { STRUCT }
   | "of"      { OF }
+  | "if"      { IF }
+  | "then"    { THEN }
+  | "else"    { ELSE }
+  | "match"   { MATCH }
+  | "end"     { END }
 
   (* builtin operators *)
   | '='       { EQ }
+  | "|>"      { SPIPE }
   | '|'       { PIPE }
   | ':'       { COLON }
   | ';'       { SEMICOLON }
   | "->"      { ARROW }
+  | '$'       { DOLLAR }
+  | '\\'      { BACKSLASH }
 
   | int       { INT (int_of_string (Lexing.lexeme lexbuf)) }
 
