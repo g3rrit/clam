@@ -34,6 +34,8 @@ module Error = struct
 
     exception E of t
 
+    exception Comp of string
+
     let to_string (e : t) : string =
         let sl = (fst e.loc).line in
         let el = (snd e.loc).line in
@@ -70,8 +72,9 @@ module Error = struct
         Printf.printf "%s" @@ to_string e; ()
     
     let handle : exn -> 'a = function
-        | E e -> print e; exit (-1)
-        | e -> Printf.printf "COMPILER ERROR\n"; raise e
+        | E e    -> print e; exit (-1)
+        | Comp e -> Printf.printf "COMPILER ERROR (%s)" e
+        | e      -> Printf.printf "UNKNOWN COMPILER ERROR\n"; raise e
 
 end
 

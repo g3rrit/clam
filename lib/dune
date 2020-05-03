@@ -1,4 +1,4 @@
 (library 
     (name pipe)
-    (libraries core core_kernel std ast)
+    (libraries core core_kernel std ast ir)
     (preprocess (pps ppx_jane)))
