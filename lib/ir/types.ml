@@ -3,13 +3,13 @@ open Namespace
 
 module Type = struct 
     type t =
-        | Prim of sid
+        | Prim of name
         | Fn of t * t
 end
 
 module Field = struct 
     type t = 
-        { name : sid
+        { name : name
         ; ty   : Type.t
         }
 end
@@ -20,25 +20,25 @@ module Exp = struct
         | PString of string
 
     type alter =
-        { con : rid
-        ; arg : sid
+        { con : name
+        ; arg : name
         ; exp : t
         }
 
     and t =
         | App of t * t
-        | Ref of rid
+        | Ref of name
         | Prim of prim
-        | Lam of sid list * t
+        | Lam of name list * t
         | If of t * t * t
         | Case of t * alter list
-        | Let of sid * Type.t * t
+        | Let of name * Type.t * t
         | Seq of t * t
 end
 
 module Comb = struct 
     type t =
-        { name : sid
+        { name : name
         ; args : Field.t list
         ; ty   : Type.t
         ; exp  : Exp.t
@@ -47,14 +47,14 @@ end
 
 module Record = struct 
     type t =
-        { name : sid 
+        { name : name 
         ; fs   : Field.t list
         }
 end
 
 module Variant = struct
     type t = 
-        { name : sid
+        { name : name
         ; vars : Record.t list
         }
 end

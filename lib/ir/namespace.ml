@@ -2,7 +2,8 @@ open Core
 open Std
 
 type sid = int
-type rid = int * int
+
+type name = sid * sid
 
 type t = string array
 
