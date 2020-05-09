@@ -14,7 +14,9 @@ let rec run (fs : File.t list) : unit =
 
 and pipe (fs : File.t list) : unit =
     let ms : Types.Module.t list = parse_mods fs in 
-    ignore ((List.map ~f:(fun m -> Types.Module.to_string m |> Stdio.printf "%s\n") ms) : unit list)
+    ignore ((List.map ~f:(fun m -> Types.Module.to_string m |> Stdio.printf "%s\n") ms) : unit list);
+    let L = Converter.Make(struct let i = 10 end) in c.convert () 
+
 
 and parse_mods (fs : File.t list) : Types.Module.t list =
     List.map fs ~f:(fun fi -> parse fi)
