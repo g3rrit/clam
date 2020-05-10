@@ -1,8 +1,0 @@
-(ocamllex lexer)
-(menhir 
-    (modules parser)
-    (flags --explain))
-
-(library 
-    (name ast)
-    (libraries base core std))

@@ -1,3 +1,0 @@
-(library 
-    (name converter)
-    (libraries base core std ast ir))
