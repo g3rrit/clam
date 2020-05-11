@@ -6,7 +6,9 @@
 #include <cinttypes>
 #include <vector>
 #include <map>
-#include <string>
+#include <memory>
+
+#include "int_string.hpp"
 
 // TYPES
 
@@ -17,14 +19,23 @@ typedef std::uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-using string = std::string;
+template <class T>
+using uptr = std::unique_ptr<T>;
+template <class T>
+using sptr = std::shared_ptr<T>;
 
 #define null nullptr;
 
-template<class T>
+// CONTAINER TYPES
+
+template <class T>
 using Array = std::vector<T>;
-template<class K, class T>
+template <class K, class T>
 using Map = std::map<K, T>;
+
+// UTILITY TYPES
+
+using File = string;
 
 // FUNCTIONS
 

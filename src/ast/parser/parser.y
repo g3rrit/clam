@@ -1,13 +1,23 @@
 %{
 #include "std.hpp"
+#include "ast_types.hpp"
 
 extern int yylex();
 extern int yyparse();
 extern FILE *yyin;
 extern int lineNum;
 
-void yyerror(const char* s);
+void yyerror(ast::Module& mod, const char* s);
 %}
+
+%code requires {
+#include "std.hpp"
+#include "ast_types.hpp"
+}
+
+
+
+%parse-param {ast::Module& mod}
 
 %union {
     char*  sval;
@@ -23,22 +33,24 @@ void yyerror(const char* s);
 
 %token LET
 
-%type<string> id
+%type<sval> id
 
 %start program
 
 %% 
 
 program
-    : id
+    : id { mod.i = 10; }
 
 id
-    : ID { $$ = string(move($1)); }
+    : ID { $$ = $1; }
     
 %%
 
-void yyerror(const char* s)
+void yyerror(ast::Module& mod, const char* s)
 {
+    (void) mod;
+
     std::fprintf(stderr, "parse error: %s \n", s);
     std::fprintf(stderr, "in line: %i\n", lineNum);
     // close(0);
