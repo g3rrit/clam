@@ -2,18 +2,20 @@
 #include "config.hpp"
 #include "ast_types.hpp"
 
-extern FILE* yyin;
-extern int yyparse(ast::Module&);
+#include "lexer.hpp"
+#include "parser.hpp"
 
 auto parse_file(File& file) 
 {
 	ast::Module module;
 
-	yyin = stdin;
-	
-	do {
-		yyparse(module);
-	} while(std::feof(yyin));
+	yyscan_t sc;
+	int res;
+
+	yylex_init(&sc);
+	yyset_in(stdin, sc);
+	res = yyparse(sc, module);
+	yylex_destroy(sc);
 
 	cout << "Module i: " << module.i << endl;
 }

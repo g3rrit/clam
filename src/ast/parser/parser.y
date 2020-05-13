@@ -1,39 +1,39 @@
-%{
-#include "std.hpp"
-#include "ast_types.hpp"
-
-extern int yylex();
-extern int yyparse();
-extern FILE *yyin;
-extern int lineNum;
-
-void yyerror(ast::Module& mod, const char* s);
-%}
+%output  "build/parser/parser.cpp"
+%defines "build/parser/parser.hpp"
+%define api.pure full
+%lex-param   { yyscan_t scanner }
+%parse-param { yyscan_t scanner }
+%parse-param { ast::Module& mod }
 
 %code requires {
-#include "std.hpp"
 #include "ast_types.hpp"
+#define YYSTYPE ast::Token
+#define YY_EXTRA_TYPE int
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void *yyscan_t;
+#endif
 }
 
+%code {
+#include "lexer.hpp"
+int yyerror(yyscan_t scanner, ast::Module& mod, const char *msg) {
+    std::fprintf(stderr, "parse error: %s \n", s);
+    std::fprintf(stderr, "in line: %i\n", lineNum);
 
-
-%parse-param {ast::Module& mod}
-
-%union {
-    char*  sval;
-    int    ival;
-    double fval;
-    char   cval;
+    return 0;
+}
 }
 
-%token<sval> ID
-%token<sval> STRING
-%token<ival> INT
-%token<fval> FLOAT
+%initial-action { yyset_extra(0, scanner); }
+
+
+%token ID
+%token STRING
+%token INT
+%token FLOAT
 
 %token LET
-
-%type<sval> id
 
 %start program
 
@@ -47,11 +47,3 @@ id
     
 %%
 
-void yyerror(ast::Module& mod, const char* s)
-{
-    (void) mod;
-
-    std::fprintf(stderr, "parse error: %s \n", s);
-    std::fprintf(stderr, "in line: %i\n", lineNum);
-    // close(0);
-} 

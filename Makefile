@@ -16,7 +16,7 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -g
-INCLUDES = -I include/ -I /usr/local/include
+INCLUDES = -I include -I build/parser -I /usr/local/include
 
 TEST_ARGS = test
 
@@ -53,15 +53,18 @@ $(BIN_PATH)/$(BIN_NAME): $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BIS
 	@echo "Linking: $@"
 	$(CXX) $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BISONF).o -o $@
 
+.PHONY: parser_src
+parser_src: $(PARSER_OUT_PATH)/$(FLEXF).cpp $(PARSER_OUT_PATH)/$(BISONF).cpp
+
 $(PARSER_OUT_PATH)/$(FLEXF).cpp: $(PARSER_PATH)/$(FLEXF).l
-	flex -o $@ $<
+	flex $<
 
 $(PARSER_OUT_PATH)/$(BISONF).cpp: $(PARSER_PATH)/$(BISONF).y
-	bison -d -o $@ $< 
+	bison $< 
 
 -include $(DEPS)
 
-$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT) dirs
+$(BUILD_PATH)/%.o: $(SRC_PATH)/%.$(SRC_EXT) dirs parser_src
 	@echo "Compiling: $< -> $@"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
 
