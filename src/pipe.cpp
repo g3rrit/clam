@@ -1,27 +1,40 @@
 #include "std.hpp"
-#include "config.hpp"
+#include "defs.hpp"
 #include "ast_types.hpp"
+#include "print.hpp"
 
-#include "lexer.hpp"
-#include "parser.hpp"
+extern int parse_file(const File&, ast::Module&);
 
-auto parse_file(File& file) 
+auto parse(const Array<File>& files, ast::Unit& unit) -> void
 {
-	ast::Module module;
+    Array<Thread> threads;
+    u32 i = 0;
 
-	yyscan_t sc;
-	int res;
+    for (const auto& file : files) {
 
-	yylex_init(&sc);
-	yyset_in(stdin, sc);
-	res = yyparse(sc, module);
-	yylex_destroy(sc);
+        vprintln("Parsing: ", file);
+        unit.modules.push_back(ast::Module {});
+        threads.push_back(Thread { [&unit](const File& file, const u32 i) -> void {
 
-	cout << "Module i: " << module.i << endl;
+            TRY_CATCH(parse_file(file, unit.modules.at(i)));
+        }, file, i });
+        i++;
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+    CHECKE();
 }
 
-auto pipe(Config& config, Array<File>& files)
+auto pipe(const Array<File>& files) -> void
 {
-	File file;
-	parse_file(file);
+    ast::Unit unit;
+    
+    try {
+        parse(files, unit);
+    } catch (Error& error) {
+        println("Error: ", error.msg);
+    }
+
 }

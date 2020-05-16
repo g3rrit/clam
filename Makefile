@@ -16,9 +16,10 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -g
+LFLAGS = -lpthread
 INCLUDES = -I include -I build/parser -I /usr/local/include
 
-TEST_ARGS = test
+TEST_ARGS = example/example.clm
 
 .PHONY: default_target
 default_target: all
@@ -51,7 +52,7 @@ test: all
 
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BISONF).o
 	@echo "Linking: $@"
-	$(CXX) $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BISONF).o -o $@
+	$(CXX) $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BISONF).o -o $@ $(LFLAGS)
 
 .PHONY: parser_src
 parser_src: $(PARSER_OUT_PATH)/$(FLEXF).cpp $(PARSER_OUT_PATH)/$(BISONF).cpp

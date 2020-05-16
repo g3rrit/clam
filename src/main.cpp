@@ -1,17 +1,19 @@
 #include "std.hpp"
-#include "config.hpp"
+#include "defs.hpp"
+#include "print.hpp"
 
-extern void pipe(Config&, Array<File>&);
+auto main(int argc, char **argv) -> int 
+{
+    vprintln("------ CLAM -----");
 
-auto main(int argc, char **argv) -> int {
-	(void) argc;
-	(void) argv;
+    Config config;
+    Array<File> files;
 
-	cout << "----- CLAM -----" << endl;
+    for (int i = 1; i < argc; i++) {
+        files.push_back(string { argv[i] });
+    }
 
-	Config config;
-	Array<File> files;
-	pipe(config, files);
+    pipe(files);
 
-	return 0;
+    return 0;
 }

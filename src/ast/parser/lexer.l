@@ -1,6 +1,7 @@
 %option outfile="build/parser/lexer.cpp" 
 %option header-file="build/parser/lexer.hpp"
-%option reentrant bison-bridge
+%option yylineno
+%option reentrant bison-bridge bison-locations
 %option noyywrap nounput noinput
 
 %{
@@ -8,12 +9,23 @@
 #define RET(TOKEN) return yyextra = TOKEN
 
 #include "std.hpp"
+#include "ast_types.hpp"
 #include <cstdlib>
 #include <cstdio>
-
 #include <cstring>
 
-auto copy_str(char *str) {
+#define YY_USER_ACTION                                             \
+    yylloc->first_line = yylloc->last_line;                          \
+    yylloc->first_column = yylloc->last_column;                      \
+    if (yylloc->last_line == yylineno)                               \
+        yylloc->last_column += yyleng;                                 \
+    else {                                                           \
+        yylloc->last_line = yylineno;                                  \
+        yylloc->last_column = yytext + yyleng - std::strrchr(yytext, '\n'); \
+    }
+
+auto copy_str(char *str) 
+{
     char *res = (char*) malloc(strlen(str) + 1);
     std::strcpy(res, str);
     return res;
@@ -29,7 +41,7 @@ let                     { printf("VOID"); RET(LET);}
 
 
 [0-9]+		            {
-                            *yylval = { Token::STRING_VAL, std::atoi(yytext) }; 
+                            *yylval = ast::Token { ast::Token::STRING_VAL, std::atoi(yytext) }; 
                             std::printf("NUMBER ");
                             RET(INT);
                         }

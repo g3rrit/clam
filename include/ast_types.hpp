@@ -4,28 +4,34 @@
 #include "std.hpp"
 
 namespace ast {
+    
+    struct Module;
 
-	struct Module {
-		int i = 1;
-	};
+    struct Unit {
+        Array<Module> modules;
+    };
 
-	struct Token {
-		enum Type {
-			INT_VAL,
-			DOUBLE_VAL,
-			CHAR_VAL,
-			STRING_VAL,
+    struct Module {
+        int i = 1;
+    };
 
-			MODULE,
-		} type;
+    struct Token {
+        enum Type {
+            INT_VAL,
+            DOUBLE_VAL,
+            CHAR_VAL,
+            STRING_VAL,
 
-		union {
-			int int_val;
-			double double_val;
-			char char_val;
-			char* string_val;
-		};
-	};
+            MODULE,
+        } type;
+
+        union {
+            int int_val;
+            double double_val;
+            char char_val;
+            char* string_val;
+        };
+    };
 }
 
 #endif

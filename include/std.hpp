@@ -7,8 +7,10 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <thread>
 
 #include "int_string.hpp"
+#include "error.hpp"
 
 // TYPES
 
@@ -24,7 +26,9 @@ using uptr = std::unique_ptr<T>;
 template <class T>
 using sptr = std::shared_ptr<T>;
 
-#define null nullptr;
+using Thread = std::thread;
+
+#define null nullptr
 
 // CONTAINER TYPES
 
@@ -45,5 +49,7 @@ using std::cout;
 using std::endl;
 
 using std::malloc;
+
+// MACROS
 
 #endif
