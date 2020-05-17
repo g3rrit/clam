@@ -10,7 +10,7 @@ auto main(int argc, char **argv) -> int
     Array<File> files;
 
     for (int i = 1; i < argc; i++) {
-        files.push_back(string { argv[i] });
+        files.push_back(File { argv[i] });
     }
 
     pipe(files);

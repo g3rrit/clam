@@ -5,6 +5,9 @@
 #include <exception>
 #include <stdexcept>
 
+
+// CONFIG
+
 struct Config {
     string version;
     string cc;
@@ -14,6 +17,8 @@ struct Config {
 };
 
 extern Config CONFIG;
+
+// EXCEPTION
 
 extern std::exception_ptr _EPTR;
 
@@ -27,6 +32,8 @@ auto static inline CHECKE() {
     do { try { x; } catch (...) { \
         if (_EPTR == nullptr) { _EPTR = std::current_exception(); }  \
     } } while(0)
+
+// PIPE
 
 auto pipe(const Array<File>& files) -> void;
 

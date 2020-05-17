@@ -34,7 +34,7 @@ auto pipe(const Array<File>& files) -> void
     try {
         parse(files, unit);
     } catch (Error& error) {
-        println("Error: ", error.msg);
+        println(error);
     }
 
 }

@@ -72,7 +72,7 @@ int parse_file(const File& file, ast::Module& module)
 
     fclose(input);
 
-    throw Error { .msg = "test" };
+    throw Error { .msg = "test", .loc = Location((u32) 10, (u32) 10) };
 
     return res;
 }

@@ -9,7 +9,8 @@ struct string {
 
     string() {}
 
-    string(char const * const s) {
+    string(char const * const s)
+    {
         _str = new char[std::strlen(s) + 1];
         std::strcpy(_str, s);
     }
@@ -17,28 +18,33 @@ struct string {
     string(const string& s) 
          : string(s._str) {}
 
-    auto operator=(const string& s) -> string& {
+    auto operator=(const string& s) -> string&
+    {
         return *this = string(s);
     }
 
-    string(string&& s) {
+    string(string&& s)
+    {
         _str = s._str;
         s._str = nullptr;
     }
 
-    auto operator=(string&& s) -> string& {
+    auto operator=(string&& s) -> string&
+    {
         _str = s._str;
         s._str = nullptr;
         return *this;
     }
 
-    ~string() {
+    ~string()
+    {
         if (_str != nullptr) {
             delete _str;
         }
     }
 
-    auto c_str() const -> char* { 
+    auto c_str() const -> char*
+    {
         return this->_str;
     }
 
