@@ -1,5 +1,6 @@
 #include "defs.hpp"
 #include <fstream>
+#include <iomanip>
 
 // CONFIG
 
@@ -36,19 +37,23 @@ std::ostream& operator<<(std::ostream& os, const Error& error)
 
     std::ifstream input(error.file.to_path().c_str(), std::ios::in);
     if (!input.is_open()) {
-        // maybe throw error here
+        os << "unable to open file";
         return os;
     }
 
     std::string s;
-    for (u32 i = 0; i < l0; i++) {
+    for (u32 i = 1; i < l0; i++) {
         std::getline(input, s);
     }
 
     assert(l1 >= l0);
-    for (u32 i = 0; i < l1 - l0; i++) {
+    for (u32 i = 0; i <= l1 - l0; i++) {
         std::getline(input, s);
-        os << l0 + 1 << " | " << s << endl;
+        std::ostream tmpos{ NULL };
+        tmpos.copyfmt(os);
+        os << std::setfill(' ') << std::setw(6) << l0;
+        os.copyfmt(tmpos);
+        os << " | " << s << endl;
     }
 
     return os;

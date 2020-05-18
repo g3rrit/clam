@@ -12,7 +12,11 @@ namespace ast {
     };
 
     struct Module {
+        File file;
         int i = 1;
+
+        Module(File _file) 
+            : file(_file) {}
     };
 
     struct Token {

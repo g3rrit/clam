@@ -21,10 +21,12 @@ typedef void *yyscan_t;
 int yyerror(YYLTYPE* yyllocp, yyscan_t scanner, ast::Module& mod, const char *msg) 
 {
     (void) scanner;
-    (void) mod;
-    std::fprintf(stderr, "error [%d : %d] -> %s\n", yyllocp->first_line, yyllocp->first_column, msg);
+    //(void) mod;
+    //std::fprintf(stderr, "error [%d : %d] -> %s\n", yyllocp->first_line, yyllocp->first_column, msg);
     //std::fprintf(stderr, "parse error: %s \n", s);
     //std::fprintf(stderr, "in line: %i\n", lineNum);
+
+    throw Error(Error::PARSER, mod.file, Location(yyllocp->first_line, yyllocp->first_column), string(msg));
 
     return 0;
 }
@@ -72,7 +74,7 @@ int parse_file(const File& file, ast::Module& module)
 
     fclose(input);
 
-    throw Error { .msg = "test", .loc = Location((u32) 10, (u32) 10) };
+    //throw Error { .msg = "test", .loc = Location((u32) 10, (u32) 10) };
 
     return res;
 }

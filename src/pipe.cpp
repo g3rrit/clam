@@ -13,7 +13,7 @@ auto parse(const Array<File>& files, ast::Unit& unit) -> void
     for (const auto& file : files) {
 
         vprintln("Parsing: ", file);
-        unit.modules.push_back(ast::Module {});
+        unit.modules.push_back(ast::Module { file });
         threads.push_back(Thread { [&unit](const File& file, const u32 i) -> void {
 
             TRY_CATCH(parse_file(file, unit.modules.at(i)));

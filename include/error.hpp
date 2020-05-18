@@ -32,11 +32,11 @@ struct Error : std::exception {
     } type;
 
     File     file;
-    string   msg;
     Location loc;
+    string   msg;
 
-    Error(string _msg, Location _loc)
-        : msg(_msg), loc(_loc) {}
+    Error(Type _type, File _file, Location _loc, string _msg)
+        : type(_type), file(_file), loc(_loc), msg(_msg) {}
 
     auto to_string() -> string;
 
