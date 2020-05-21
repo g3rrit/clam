@@ -21,15 +21,22 @@ typedef void *yyscan_t;
 int yyerror(YYLTYPE* yyllocp, yyscan_t scanner, ast::Module& mod, const char *msg) 
 {
     (void) scanner;
-    //(void) mod;
-    //std::fprintf(stderr, "error [%d : %d] -> %s\n", yyllocp->first_line, yyllocp->first_column, msg);
-    //std::fprintf(stderr, "parse error: %s \n", s);
-    //std::fprintf(stderr, "in line: %i\n", lineNum);
 
     throw Error(Error::PARSER, mod.file, Location(yyllocp->first_line, yyllocp->first_column), String(msg));
 
     return 0;
 }
+
+Location to_loc(YYLTYPE* yylocp)
+{
+    return Location { 
+        yylocp->first_line,
+        yylocp->first_column
+    };
+}
+
+#define LOC to_loc(&yyloc)
+
 }
 
 %initial-action { yyset_extra(0, scanner); }
@@ -48,7 +55,7 @@ program
     : id { mod.i = 10; }
 
 id
-    : ID { $$ = $1; }
+    : ID { $$ = new ast::Id { String($1.string_val), LOC } }
     
 %%
 

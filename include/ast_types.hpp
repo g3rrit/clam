@@ -19,6 +19,11 @@ namespace ast {
             : file(_file) {}
     };
 
+    struct Id {
+        String   val;
+        Location loc;
+    };
+
     struct Token {
         enum Type {
             INT_VAL,
@@ -27,6 +32,7 @@ namespace ast {
             STRING_VAL,
 
             MODULE,
+            ID,
         } type;
 
         union {
@@ -34,6 +40,8 @@ namespace ast {
             double double_val;
             char char_val;
             char* string_val;
+            
+            Id* id;
         };
     };
 }
