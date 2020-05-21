@@ -9,11 +9,11 @@
 // CONFIG
 
 struct Config {
-    string version;
-    string cc;
+    String version;
+    String cc;
     bool   verbose;
 
-    string output;
+    String output;
 };
 
 extern Config CONFIG;
@@ -22,7 +22,7 @@ extern Config CONFIG;
 
 extern std::exception_ptr _EPTR;
 
-auto static inline CHECKE() {
+static inline void CHECKE() {
     if (_EPTR != nullptr) {
         std::rethrow_exception(_EPTR);
     }
@@ -35,6 +35,6 @@ auto static inline CHECKE() {
 
 // PIPE
 
-auto pipe(const Array<File>& files) -> void;
+void pipe(const Array<File>& files);
 
 #endif

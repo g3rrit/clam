@@ -5,7 +5,7 @@
 #include <utility>
 #include <cstdint>
 
-#include "int_string.hpp"
+#include "string.hpp"
 
 struct Location {
     std::pair<u32, u32> p0;
@@ -19,7 +19,7 @@ struct Location {
         : p0(_p0), p1(_p1) {}
 };
 
-auto inline operator+(const Location& l, const Location& r) -> Location
+Location inline operator+(const Location& l, const Location& r)
 {
     return Location { l.p0, r.p1 };
 }
@@ -33,14 +33,14 @@ struct Error : std::exception {
 
     File     file;
     Location loc;
-    string   msg;
+    String   msg;
 
-    Error(Type _type, File _file, Location _loc, string _msg)
+    Error(Type _type, File _file, Location _loc, String _msg)
         : type(_type), file(_file), loc(_loc), msg(_msg) {}
 
-    auto to_string() -> string;
+    String to_string();
 
-    auto friend operator<<(std::ostream&, const Error&) -> std::ostream&;
+    friend std::ostream& operator<<(std::ostream&, const Error&);
 };
 
 #endif

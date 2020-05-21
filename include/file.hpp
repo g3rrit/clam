@@ -1,10 +1,10 @@
 #ifndef FILE_HPP
 #define FILE_HPP
 
-#include "int_string.hpp"
+#include "string.hpp"
 
-struct File : string {
-    auto to_path() const -> string
+struct File : String {
+    String to_path() const
     {
         return *this;
     }

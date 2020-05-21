@@ -5,7 +5,7 @@
 
 extern int parse_file(const File&, ast::Module&);
 
-auto parse(const Array<File>& files, ast::Unit& unit) -> void
+void parse(const Array<File>& files, ast::Unit& unit)
 {
     Array<Thread> threads;
     u32 i = 0;
@@ -27,7 +27,7 @@ auto parse(const Array<File>& files, ast::Unit& unit) -> void
     CHECKE();
 }
 
-auto pipe(const Array<File>& files) -> void
+void pipe(const Array<File>& files)
 {
     ast::Unit unit;
     

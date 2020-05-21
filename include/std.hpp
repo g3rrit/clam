@@ -2,7 +2,7 @@
 #define STD_HPP
 
 #include "types.hpp"
-#include "int_string.hpp"
+#include "string.hpp"
 #include "file.hpp"
 #include "error.hpp"
 

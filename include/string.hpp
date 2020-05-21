@@ -1,56 +1,58 @@
-#ifndef INT_STRING_H
-#define INT_STRING_H
+#ifndef STRING_H
+#define STRING_H
 
 #include <cstring>
 #include <cstdlib>
 
-struct string {
+struct String {
     char *_str = nullptr;
 
-    string() {}
+    String() {}
 
-    string(char const * const s)
+    String(char const * const s)
     {
         _str = new char[std::strlen(s) + 1];
         std::strcpy(_str, s);
     }
 
-    string(const string& s) 
-         : string(s._str) {}
+    String(const String& s) 
+         : String(s._str) {}
 
-    auto operator=(const string& s) -> string&
+    String& operator=(const String& s)
     {
-        return *this = string(s);
+        return *this = String(s);
     }
 
-    string(string&& s)
+    String(String&& s)
     {
         _str = s._str;
         s._str = nullptr;
     }
 
-    auto operator=(string&& s) -> string&
+    String& operator=(String&& s)
     {
         _str = s._str;
         s._str = nullptr;
         return *this;
     }
 
-    ~string()
+    ~String()
     {
         if (_str != nullptr) {
             delete _str;
         }
     }
 
-    auto c_str() const -> char*
+    char* c_str() const
     {
         return this->_str;
     }
 
-    auto friend operator<<(std::ostream& os, const string& str) -> std::ostream& 
+    friend std::ostream& operator<<(std::ostream& os, const String& str)
     {
-        os << str._str;
+        if (str._str != nullptr) {
+            os << str._str;
+        }
         return os;
     }
 };

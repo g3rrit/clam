@@ -24,7 +24,7 @@
         yylloc->last_column = yytext + yyleng - std::strrchr(yytext, '\n'); \
     }
 
-auto copy_str(char *str) 
+char* copy_str(char *str) 
 {
     char *res = (char*) malloc(strlen(str) + 1);
     std::strcpy(res, str);
