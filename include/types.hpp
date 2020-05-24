@@ -36,7 +36,11 @@ template <class K, class T>
 using Map = std::map<K, T>;
 
 using std::move;
+using std::make_unique;
+using std::make_shared;
+using std::forward;
 
+using std::ostream;
 using std::cout;
 using std::endl;
 

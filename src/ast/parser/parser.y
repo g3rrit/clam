@@ -30,12 +30,18 @@ int yyerror(YYLTYPE* yyllocp, yyscan_t scanner, ast::Module& mod, const char *ms
 Location to_loc(YYLTYPE* yylocp)
 {
     return Location { 
-        yylocp->first_line,
-        yylocp->first_column
+        (uint32_t)yylocp->first_line,
+        (uint32_t)yylocp->first_column
     };
 }
 
 #define LOC to_loc(&yyloc)
+
+#define SET(l, tx, field, value) \
+    do { \
+        l._type = ast::Token::tx; \
+        l.field = value; \
+    } while(0)
 
 }
 
@@ -48,14 +54,58 @@ Location to_loc(YYLTYPE* yylocp)
 %token FLOAT
 
 %token LET
+%token DATA
+%token STRUCT
+
+%token COLON
+%token SEMICOLON
+%token EQUALS
 
 %% 
 
 program
-    : id { mod.i = 10; }
+    : tl_p { mod.add_tl($1.toplevel); }
+    ;
 
-id
-    : ID { $$ = new ast::Id { String($1.string_val), LOC } }
+tl_p 
+    : data_p { 
+            SET($$, TOPLEVEL, toplevel, (new ast::Toplevel { $1.data })); 
+        }
+    ;
+
+data_p
+    : record_p { 
+            SET($$, DATA, data, (new ast::Data { $1.record })); 
+        }
+    | variant_p { 
+            SET($$, DATA, data, (new ast::Data { $1.variant })); 
+        }
+    ;
+
+record_p
+    : STRUCT id_p { 
+            SET($$, RECORD, record, (new ast::Record { $1.id })); 
+        }
+    ;
+
+variant_p
+    : DATA id_p { 
+            SET($$, VARIANT, variant, (new ast::Variant { $1.id })); 
+        }
+    ;
+
+
+id_p
+    : ID { 
+            SET($$, ID, id, (new ast::Id { String($1.string_val), LOC })); 
+        }
+    ;
+
+int_p
+    : INT { 
+            SET($$, INT_LIT, int_lit, new ast::Int { $1.int_val }); 
+        }
+    ;
     
 %%
 

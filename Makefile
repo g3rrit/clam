@@ -50,6 +50,11 @@ test: all
 	@echo "Running Tests"
 	./$(BIN_NAME) $(TEST_ARGS)
 
+.PHONY: debug
+debug: all
+	@echo "DEBUGGING"
+	gdb --args ./$(BIN_NAME) $(TEST_ARGS)
+
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BISONF).o
 	@echo "Linking: $@"
 	$(CXX) $(OBJECTS) $(BUILD_PATH)/$(FLEXF).o $(BUILD_PATH)/$(BISONF).o -o $@ $(LFLAGS)

@@ -34,14 +34,21 @@ char* copy_str(char *str)
 
 %%
 
-[ \t]                   ; //ignore all whitespaces
-[\n]                    { std::printf("\n");} 
+[ \t]                   ; // ignore all whitespaces
+[\n]                    ; // ignore all newlines
 
-let                     { printf("VOID"); RET(LET);}
+let                     { RET(LET); }
+struct                  { RET(STRUCT); }
+data                    { RET(DATA); }
+
+':'                     { RET(COLON); }
+";"                     { RET(SEMICOLON); }
+'='                     { RET(EQUALS); }
 
 
 [0-9]+		            {
-                            *yylval = ast::Token { ast::Token::STRING_VAL, std::atoi(yytext) }; 
+                            yylval->_type = ast::Token::INT_VAL;
+                            yylval->int_val = atoi(yytext);
                             std::printf("NUMBER ");
                             RET(INT);
                         }
@@ -53,6 +60,8 @@ let                     { printf("VOID"); RET(LET);}
                         }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {   
+                            yylval->_type = ast::Token::STRING_VAL;
+                            yylval->string_val = copy_str(yytext);
                             //yylval.sval = copy_str(yytext); 
                             printf("ID ");
                             RET(ID);

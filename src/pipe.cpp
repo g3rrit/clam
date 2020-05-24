@@ -13,10 +13,10 @@ void parse(const Array<File>& files, ast::Unit& unit)
     for (const auto& file : files) {
 
         vprintln("Parsing: ", file);
-        unit.modules.push_back(ast::Module { file });
+        unit.modules.emplace_back(new ast::Module { file });
         threads.push_back(Thread { [&unit](const File& file, const u32 i) -> void {
 
-            TRY_CATCH(parse_file(file, unit.modules.at(i)));
+            TRY_CATCH(parse_file(file, *unit.modules.at(i)));
         }, file, i });
         i++;
     }
@@ -33,6 +33,10 @@ void pipe(const Array<File>& files)
     
     try {
         parse(files, unit);
+
+        for (auto& mod : unit.modules) {
+            println(*mod);
+        }
     } catch (Error& error) {
         println(error);
     }
