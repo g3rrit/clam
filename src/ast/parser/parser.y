@@ -52,6 +52,7 @@ Location to_loc(YYLTYPE* yylocp)
 %token STRING
 %token INT
 %token FLOAT
+%token CHAR
 
 %token LET
 %token DATA
@@ -84,29 +85,27 @@ data_p
 
 record_p
     : STRUCT id_p { 
-            SET($$, RECORD, record, (new ast::Record { $1.id })); 
+            SET($$, RECORD, record, (new ast::Record { $2.id })); 
         }
     ;
 
 variant_p
     : DATA id_p { 
-            SET($$, VARIANT, variant, (new ast::Variant { $1.id })); 
+            SET($$, VARIANT, variant, (new ast::Variant { $2.id })); 
         }
     ;
 
 
-id_p
-    : ID { 
-            SET($$, ID, id, (new ast::Id { String($1.string_val), LOC })); 
-        }
-    ;
+id_p : ID {  $$ = $1; } ;
 
-int_p
-    : INT { 
-            SET($$, INT_LIT, int_lit, new ast::Int { $1.int_val }); 
-        }
-    ;
-    
+int_p : INT { $$ = $1; } ;
+
+float_p : FLOAT { $$ = $1; } ;
+
+string_p : STRING { $$ = $1; } ;
+
+char_p : CHAR { $$ = $1; } ;
+
 %%
 
 #include <cstdio>

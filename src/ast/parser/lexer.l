@@ -30,8 +30,19 @@ char* copy_str(char *str)
     std::strcpy(res, str);
     return res;
 }
-%}
 
+Location to_loc(YYLTYPE* yylocp);
+
+#define LOC to_loc(yylloc)
+
+#define SET(tx, field, value) \
+    do { \
+        yylval->_type = ast::Token::tx; \
+        yylval->field = value; \
+    } while(0)
+
+
+%}
 %%
 
 [ \t]                   ; // ignore all whitespaces
@@ -47,28 +58,27 @@ data                    { RET(DATA); }
 
 
 [0-9]+		            {
-                            yylval->_type = ast::Token::INT_VAL;
-                            yylval->int_val = atoi(yytext);
-                            std::printf("NUMBER ");
+                            SET(INT_LIT, int_lit, (new ast::Int_Lit { atoi(yytext), LOC }));
                             RET(INT);
                         }
 
 [0-9]+\.[0-9]+          {   
-                            //yylval.fval = atof(yytext); 
-                            std::printf("FLOAT");
+                            SET(FLOAT_LIT, float_lit, (new ast::Float_Lit { atof(yytext), LOC }));
                             RET(FLOAT);
                         }
 
 [a-zA-Z_][a-zA-Z0-9_]*  {   
-                            yylval->_type = ast::Token::STRING_VAL;
-                            yylval->string_val = copy_str(yytext);
-                            //yylval.sval = copy_str(yytext); 
-                            printf("ID ");
+                            SET(ID, id, (new ast::Id { String(copy_str(yytext)), LOC }));
                             RET(ID);
                         }
 
+\'[a-zA-Z]\'            {
+                            SET(CHAR_LIT, char_lit, (new ast::Char_Lit { yytext[0], LOC }));
+                            RET(CHAR);
+                        }
+
 \"(\\.|[^"])*\"         {
-                            //printf("COMMENT: %s", yytext);
+                            SET(STRING_LIT, string_lit, (new ast::String_Lit { String(copy_str(yytext)), LOC }));
                             RET(STRING);
                         }   
 

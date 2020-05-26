@@ -314,14 +314,12 @@ namespace ast {
         ~Toplevel()
         {
             switch(_type) {
-            case DATA: {
+            case DATA:
                 delete data;
                 break;
-            }
-            case COMB: {
+            case COMB:
                 delete comb;
                 break;
-            }
             }
         }
 
@@ -368,7 +366,7 @@ namespace ast {
     struct Token {
         enum T {
             INT_VAL,
-            DOUBLE_VAL,
+            FLOAT_VAL,
             CHAR_VAL,
             STRING_VAL,
 
@@ -395,7 +393,7 @@ namespace ast {
 
         union {
             int int_val;
-            double double_val;
+            double float_val;
             char char_val;
             char* string_val;
             
