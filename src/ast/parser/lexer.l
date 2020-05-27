@@ -48,6 +48,9 @@ Location to_loc(YYLTYPE* yylocp);
 [ \t]                   ; // ignore all whitespaces
 [\n]                    ; // ignore all newlines
 
+module                  { RET(MODULE); }
+end                     { RET(END); }
+
 let                     { RET(LET); }
 struct                  { RET(STRUCT); }
 data                    { RET(DATA); }

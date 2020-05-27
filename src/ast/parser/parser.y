@@ -4,7 +4,8 @@
 %locations
 %lex-param   { yyscan_t scanner }
 %parse-param { yyscan_t scanner }
-%parse-param { ast::Module& mod }
+%parse-param { Fn<void(ast::Module*)> cb }
+%parse-param { const File& file }
 
 %code requires {
 #include "ast_types.hpp"
@@ -18,11 +19,11 @@ typedef void *yyscan_t;
 
 %code {
 #include "lexer.hpp"
-int yyerror(YYLTYPE* yyllocp, yyscan_t scanner, ast::Module& mod, const char *msg) 
+int yyerror(YYLTYPE* yyllocp, yyscan_t scanner, Fn<void(ast::Module*)>, const File& file, const char *msg) 
 {
     (void) scanner;
 
-    throw Error(Error::PARSER, mod.file, Location(yyllocp->first_line, yyllocp->first_column), String(msg));
+    throw Error(Error::PARSER, file, Location(yyllocp->first_line, yyllocp->first_column), String(msg));
 
     return 0;
 }
@@ -48,6 +49,8 @@ Location to_loc(YYLTYPE* yylocp)
 %initial-action { yyset_extra(0, scanner); }
 
 
+%token MODULE
+%token END
 %token ID
 %token STRING
 %token INT
@@ -64,8 +67,18 @@ Location to_loc(YYLTYPE* yylocp)
 
 %% 
 
-program
-    : tl_p { mod.add_tl($1.toplevel); }
+file_p
+    : /* empty */
+    | file_p mod_p { cb($2.module); }
+    ;
+
+mod_p
+    : mod_ps END { $$ = $1; }
+    ;
+
+mod_ps
+    : MODULE id_p { SET($$, MODULE, module, (new ast::Module { file, $2.id })); }
+    | mod_ps tl_p { $$ = $1; $$.module->add_tl($2.toplevel); }
     ;
 
 tl_p 
@@ -110,7 +123,7 @@ char_p : CHAR { $$ = $1; } ;
 
 #include <cstdio>
 
-int parse_file(const File& file, ast::Module& module) 
+int parse_file(const File& file, Fn<void(ast::Module*)> cb) 
 {
     yyscan_t sc;
     int res = 0;
@@ -125,7 +138,7 @@ int parse_file(const File& file, ast::Module& module)
         return 0;
     }
     yyset_in(input, sc);
-    res = yyparse(sc, module);
+    res = yyparse(sc, cb, file);
     yylex_destroy(sc);
 
     fclose(input);

@@ -140,7 +140,7 @@ namespace ast {
             for (auto& field : record.fields) {
                 os << *field << endl;
             }
-            os << "END";
+            os << "END_RECORD";
             return os;
         }
     };
@@ -163,7 +163,7 @@ namespace ast {
             for (auto& record : variant.records) {
                 os << *record << endl;
             }
-            os << "END";
+            os << "END_VARIANT";
             return os;
         }
     };
@@ -339,10 +339,11 @@ namespace ast {
 
     struct Module {
         File file;
+        uptr<Id> id;
         Array<uptr<Toplevel>> tls;
 
-        Module(File _file) 
-            : file(_file) {}
+        Module(File _file, Id* _id) 
+            : file(_file), id(_id) {}
 
         void add_tl(Toplevel* tl)
         {
@@ -351,16 +352,18 @@ namespace ast {
 
         friend ostream& operator<<(ostream& os, const Module& mod)
         {
+            os << "MODULE " << *mod.id << endl;
             os << "[ FILE: " << mod.file.to_path() << " ]" << endl;
             for (auto& tl : mod.tls) {
-                os << *tl;
+                os << *tl << endl;
             }
+            os << "END_MODULE";
             return os;
         }
     };
 
     struct Unit {
-        Array<uptr<Module>> modules;
+       Array<uptr<Module>> modules;
     };
 
     struct Token {
@@ -396,6 +399,8 @@ namespace ast {
             double float_val;
             char char_val;
             char* string_val;
+
+            Module* module;
             
             Id* id;
             Int_Lit* int_lit;

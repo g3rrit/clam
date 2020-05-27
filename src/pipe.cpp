@@ -3,21 +3,25 @@
 #include "ast_types.hpp"
 #include "print.hpp"
 
-extern int parse_file(const File&, ast::Module&);
+extern int parse_file(const File&, Fn<void(ast::Module*)>);
 
 void parse(const Array<File>& files, ast::Unit& unit)
 {
     Array<Thread> threads;
+    Mutex mutex;
     u32 i = 0;
 
     for (const auto& file : files) {
 
         vprintln("Parsing: ", file);
-        unit.modules.emplace_back(new ast::Module { file });
-        threads.push_back(Thread { [&unit](const File& file, const u32 i) -> void {
+        threads.push_back(Thread { [&unit, &mutex](const File& file) -> void {
 
-            TRY_CATCH(parse_file(file, *unit.modules.at(i)));
-        }, file, i });
+            TRY_CATCH(parse_file(file, [&unit, &mutex](ast::Module* mod) {
+                mutex.lock();
+                unit.modules.emplace_back(mod);
+                mutex.unlock();
+            }));
+        }, file});
         i++;
     }
 
