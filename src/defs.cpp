@@ -8,6 +8,7 @@ Config CONFIG = Config {
     .version = "0.0.1",
     .cc = "gcc",
     .verbose = false,
+    .thread_count = 4,
     .output = "./a.out",
 };
 
@@ -58,3 +59,7 @@ std::ostream& operator<<(std::ostream& os, const Error& error)
 
     return os;
 }
+
+// THREAD POOL
+
+Thread_Pool THREAD_POOL;

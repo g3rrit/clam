@@ -6,6 +6,7 @@
 #include <cinttypes>
 #include <vector>
 #include <map>
+#include <queue>
 #include <memory>
 #include <thread>
 #include <mutex>
@@ -38,6 +39,9 @@ using Array = std::vector<T>;
 
 template <class K, class T>
 using Map = std::map<K, T>;
+
+template <class T>
+using Queue = std::queue<T>;
 
 //template <class R, class... Args>
 //using Fn = std::function<R(Args...)>;

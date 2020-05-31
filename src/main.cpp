@@ -2,11 +2,22 @@
 #include "defs.hpp"
 #include "print.hpp"
 
+void init()
+{
+    THREAD_POOL.init(CONFIG.thread_count);
+}
+
+void cleanup()
+{
+    THREAD_POOL.cleanup();
+}
+
 int main(int argc, char **argv)
 {
     vprintln("------ CLAM -----");
 
-    Config config;
+    init();
+
     Array<File> files;
 
     for (int i = 1; i < argc; i++) {
@@ -14,6 +25,8 @@ int main(int argc, char **argv)
     }
 
     pipe(files);
+
+    cleanup();
 
     return 0;
 }
