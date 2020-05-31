@@ -66,7 +66,7 @@ $(PARSER_OUT_PATH)/$(FLEXF).cpp: $(PARSER_PATH)/$(FLEXF).l
 	flex $<
 
 $(PARSER_OUT_PATH)/$(BISONF).cpp: $(PARSER_PATH)/$(BISONF).y
-	bison $< 
+	bison --debug $< 
 
 -include $(DEPS)
 

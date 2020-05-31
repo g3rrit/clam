@@ -61,9 +61,22 @@ Location to_loc(YYLTYPE* yylocp)
 %token DATA
 %token STRUCT
 
+%token IF
+%token THEN
+%token ELSE
+
+%token ARROW
 %token COLON
+%token PIPE
 %token SEMICOLON
 %token EQUALS
+
+%token LPAREN
+%token RPAREN
+%token LBRACK
+%token RBRACK
+%token LBRACE
+%token RBRACE
 
 %% 
 
@@ -85,6 +98,9 @@ tl_p
     : data_p { 
             SET($$, TOPLEVEL, toplevel, (new ast::Toplevel { $1.data })); 
         }
+    | comb_p {
+            SET($$, TOPLEVEL, toplevel, (new ast::Toplevel { $1.comb }));
+        }
     ;
 
 data_p
@@ -92,22 +108,66 @@ data_p
             SET($$, DATA, data, (new ast::Data { $1.record })); 
         }
     | variant_p { 
+            printf("found variant\n");
             SET($$, DATA, data, (new ast::Data { $1.variant })); 
         }
     ;
 
 record_p
-    : STRUCT id_p { 
+    : STRUCT id_p EQUALS field_p { 
             SET($$, RECORD, record, (new ast::Record { $2.id })); 
+            $$.record->add_field($4.field);
+        }
+    | record_p SEMICOLON field_p {
+            $$.record->add_field($3.field);
         }
     ;
 
 variant_p
-    : DATA id_p { 
+    : DATA id_p EQUALS variant_field_p { 
             SET($$, VARIANT, variant, (new ast::Variant { $2.id })); 
+            $$.variant->add_record($4.record);
+        }
+    | variant_p PIPE variant_field_p {
+            $$.variant->add_record($3.record);
         }
     ;
 
+variant_field_p
+    : variant_field_p SEMICOLON field_p { 
+            $$.record->add_field($3.field);
+        }
+    | id_p { SET($$, RECORD, record, (new ast::Record { $1.id })); }
+
+comb_p
+    : LET id_p args_p COLON type_p EQUALS exp_p {
+            SET($$, COMB, comb, (new ast::Comb { $2.id, $5.type, $7.exp }));
+            for (void* arg : *$3.list) {
+                $$.comb->add_arg(static_cast<ast::Field*>(arg));
+            }
+        }
+    ;
+
+args_p
+    : /* empty */ { SET($$, LIST, list, (new Array<void*> {})); }
+    | args_p field_p { $$.list->push_back($2.field); }
+    ;
+
+exp_p
+    : int_p { SET($$, EXP, exp, (new ast::Exp { $1.int_lit })); }
+    | float_p { SET($$, EXP, exp, (new ast::Exp { $1.float_lit })); }
+    | string_p { SET($$, EXP, exp, (new ast::Exp { $1.string_lit })); }
+    | char_p { SET($$, EXP, exp, (new ast::Exp { $1.char_lit })); }
+    ;
+
+field_p
+    : id_p COLON type_p { SET($$, FIELD, field, (new ast::Field { $1.id, $3.type })); }
+    ;
+
+type_p
+    : id_p ARROW type_p { SET($$, TYPE, type, (new ast::Type { new ast::Type { $1.id }, $3.type })); }
+    | id_p { SET($$, TYPE, type, (new ast::Type { $1.id })); }
+    ;
 
 id_p : ID {  $$ = $1; } ;
 
@@ -125,6 +185,11 @@ char_p : CHAR { $$ = $1; } ;
 
 int parse_file(const File& file, Fn<void(ast::Module*)> cb) 
 {
+#ifdef YYDEBUG 
+    yydebug = 1;
+#endif
+
+
     yyscan_t sc;
     int res = 0;
 

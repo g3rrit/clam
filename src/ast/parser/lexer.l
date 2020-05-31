@@ -55,9 +55,22 @@ let                     { RET(LET); }
 struct                  { RET(STRUCT); }
 data                    { RET(DATA); }
 
-':'                     { RET(COLON); }
+if                      { RET(IF); }
+then                    { RET(THEN); }
+else                    { RET(ELSE); }
+
+"->"                    { RET(ARROW); }
+":"                     { RET(COLON); }
 ";"                     { RET(SEMICOLON); }
-'='                     { RET(EQUALS); }
+"|"                     { RET(PIPE); }
+"="                     { RET(EQUALS); }
+
+"\("                    { RET(LPAREN); }
+"\)"                    { RET(RPAREN); }
+"\["                    { RET(LBRACK); }
+"\]"                    { RET(RBRACK); }
+"\{"                    { RET(LBRACE); }
+"\}"                    { RET(RBRACE); }
 
 
 [0-9]+		            {

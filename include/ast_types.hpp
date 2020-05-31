@@ -180,10 +180,10 @@ namespace ast {
         };
 
         Data(Record* _rec)
-            : rec(_rec) {}
+            : _type(RECORD), rec(_rec) {}
 
         Data(Variant* _var)
-            : var(_var) {}
+            : _type(VARIANT), var(_var) {}
         
         ~Data()
         {
@@ -278,18 +278,28 @@ namespace ast {
     };
 
     struct Comb {
-        uptr<Id>   id;
-        uptr<Type> ty;
-        uptr<Exp>  val;
+        uptr<Id>           id;
+        Array<uptr<Field>> args;
+        uptr<Type>         ty;
+        uptr<Exp>          val;
 
         Comb(Id* _id, Type* _ty, Exp* _val)
             : id(_id), ty(_ty), val(_val) {}
 
+        void add_arg(Field* field) {
+            args.emplace_back(field);
+        }
+
         
         friend ostream& operator<<(ostream& os, const Comb& comb)
         {
-            os << "COMB " << *comb.id << " : " << *comb.ty << " = " << endl;
+            os << "COMB " << *comb.id << endl;
+            for (auto& arg : comb.args) {
+                os << *arg << " ";
+            }
+            os << " : " << *comb.ty << " = " << endl;
             os << *comb.val << endl;
+            os << "END_COMB";
             return os;
         }
     };
@@ -392,6 +402,9 @@ namespace ast {
             FLOAT_LIT,
             STRING_LIT,
             CHAR_LIT,
+
+            LIST,
+            EMPTY,
         } _type;
 
         union {
@@ -417,6 +430,9 @@ namespace ast {
             Exp* exp;
             Toplevel* toplevel;
 
+            Array<void*> *list;
+
+            void* empty;
             void* __set;
         };
 
