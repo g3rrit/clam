@@ -218,6 +218,8 @@ namespace ast {
             PCHAR,
             PSTRING,
             APP,
+            REF,
+            
         } _type;
  
         union {
@@ -233,23 +235,43 @@ namespace ast {
 
         Exp() = default;
 
-        Exp(Int_Lit* _ilit)
-            : _type(PINT), ilit(_ilit) {}
+        static inline Exp* Ilit(Int_Lit* _ilit)
+        {
+            Exp* e = new Exp {};
+            e->_type = PINT; 
+            e->ilit = _ilit;
+            return e;
+        }
 
-        Exp(Float_Lit* _flit)
-            : _type(PFLOAT), flit(_flit) {}
+        static inline Exp* Flit(Float_Lit* _flit)
+        {
+            Exp* e = new Exp {};
+            e->_type = PFLOAT;
+            e->flit = _flit;
+            return e;
+        }
 
-        Exp(Char_Lit* _clit)
-            : _type(PCHAR), clit(_clit) {}
+        static inline Exp* Slit(String_Lit* _slit)
+        {
+            Exp* e = new Exp {};
+            e->_type = PSTRING;
+            e->slit = _slit;
+            return e;
+        }
 
-        Exp(String_Lit* _slit)
-            : _type(PSTRING), slit(_slit) {}
+        static inline Exp* Clit(Char_Lit* _clit)
+        {
+            Exp* e = new Exp {};
+            e->_type = PCHAR;
+            e->clit = _clit;
+            return e;
+        }
 
-        Exp App(Exp* _l, Exp* _r) {
-            Exp r;
-            r._type = APP;
-            r.app = { _l, _r };
-            return r;
+        static inline Exp* App(Exp* _l, Exp* _r) {
+            Exp* e = new Exp {};
+            e->_type = APP;
+            e->app = { _l, _r };
+            return e;
         }
 
         // todo deconstructor

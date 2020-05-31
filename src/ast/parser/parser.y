@@ -154,10 +154,10 @@ args_p
     ;
 
 exp_p
-    : int_p { SET($$, EXP, exp, (new ast::Exp { $1.int_lit })); }
-    | float_p { SET($$, EXP, exp, (new ast::Exp { $1.float_lit })); }
-    | string_p { SET($$, EXP, exp, (new ast::Exp { $1.string_lit })); }
-    | char_p { SET($$, EXP, exp, (new ast::Exp { $1.char_lit })); }
+    : int_p { SET($$, EXP, exp, (ast::Exp::Ilit($1.int_lit))); }
+    | float_p { SET($$, EXP, exp, (ast::Exp::Flit($1.float_lit))); }
+    | string_p { SET($$, EXP, exp, (ast::Exp::Slit($1.string_lit))); }
+    | char_p { SET($$, EXP, exp, (ast::Exp::Clit($1.char_lit))); }
     ;
 
 field_p
