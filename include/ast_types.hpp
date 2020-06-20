@@ -270,7 +270,7 @@ namespace ast {
             } cond;
             struct {
                 Exp* exp;
-                
+                Array<uptr<Alter>> alter;
             } match;
         };
 
@@ -308,12 +308,22 @@ namespace ast {
             return e;
         }
 
-        static inline Exp* App(Exp* _l, Exp* _r) {
+        static inline Exp* Seq(Exp* _l, Exp* _r) 
+        {
+            Exp* e = new Exp {};
+            e->_type = SEQ;
+            e->seq = { _l, _r };
+            return e;
+        }
+
+        static inline Exp* App(Exp* _l, Exp* _r) 
+        {
             Exp* e = new Exp {};
             e->_type = APP;
             e->app = { _l, _r };
             return e;
         }
+
 
         // todo deconstructor
 
