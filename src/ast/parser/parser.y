@@ -108,7 +108,6 @@ data_p
             SET($$, DATA, data, (new ast::Data { $1.record })); 
         }
     | variant_p { 
-            printf("found variant\n");
             SET($$, DATA, data, (new ast::Data { $1.variant })); 
         }
     ;

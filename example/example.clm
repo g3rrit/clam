@@ -5,8 +5,11 @@ struct foo
     ; b : char
 
 data bar
-    = A ; a : int ; b : char
-    | B ; b : bool
+    = A 
+        ; a : int 
+        ; b : char
+    | B 
+        ; b : bool
 
 let lol a : int : int 
     = 10

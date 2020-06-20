@@ -217,10 +217,29 @@ namespace ast {
             PFLOAT,
             PCHAR,
             PSTRING,
+            SEQ,
             APP,
             REF,
-            
+            LET,
+            LAM,
+            COND,
+            MATCH
         } _type;
+
+        struct Alter {
+            uptr<Id>  con;
+            uptr<Id>  var;
+            uptr<Exp> exp;
+
+            Alter(Id* _con, Id* _var, Exp* _exp) 
+                : con(_con), var(_var), exp(_exp) {}
+
+            friend ostream& operator<<(ostream& os, const Alter& alter)
+            {
+                os << *alter.con << " " << *alter.var << " -> " << *alter.exp;
+                return os;
+            }
+        };
  
         union {
             Int_Lit*    ilit;
@@ -230,7 +249,29 @@ namespace ast {
             struct {
                 Exp* l;
                 Exp* r;
+            } seq;
+            struct {
+                Exp* l;
+                Exp* r;
             } app;
+            Id* ref;
+            struct {
+                Id* var;
+                Exp* val;
+            } let;
+            struct {
+                Id* var;
+                Exp* exp;
+            } lam;
+            struct {
+                Exp* c;
+                Exp* t;
+                Exp* f;
+            } cond;
+            struct {
+                Exp* exp;
+                
+            } match;
         };
 
         Exp() = default;
