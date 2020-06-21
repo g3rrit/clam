@@ -58,4 +58,7 @@ using std::endl;
 
 using std::malloc;
 
+#define DELETE_PTR(x) do { if (x != nullptr) { delete x; } x = nullptr; } while (0)
+#define MOVE_PTR(r, x) do { r = x; x = nullptr; } while (0)
+
 #endif

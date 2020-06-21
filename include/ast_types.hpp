@@ -85,11 +85,11 @@ namespace ast {
         {
             switch(_type) {
             case PRIM:
-                delete prim;
+                DELETE_PTR(prim);
                 break;
             case FN:
-                delete fn.l;
-                delete fn.r;
+                DELETE_PTR(fn.l);
+                DELETE_PTR(fn.r);
                 break;
             }
         }
@@ -189,10 +189,10 @@ namespace ast {
         {
             switch(_type) {
             case RECORD:
-                delete rec;
+                DELETE_PTR(rec);
                 break;
             case VARIANT:
-                delete var;
+                DELETE_PTR(var);
                 break;
             }
         }
@@ -270,7 +270,7 @@ namespace ast {
             } cond;
             struct {
                 Exp* exp;
-                Array<uptr<Alter>> alter;
+                Array<uptr<Alter>>* alter;
             } match;
         };
 
@@ -323,9 +323,92 @@ namespace ast {
             e->app = { _l, _r };
             return e;
         }
+        
+        static inline Exp* Ref(Id* _ref)
+        {
+            Exp* e = new Exp {};
+            e->_type = REF;
+            e->ref = _ref;
+            return e;
+        }
 
+        static inline Exp* Let(Id* _var, Exp* _val)
+        {
+            Exp* e = new Exp {};
+            e->_type = LET;
+            e->let = { _var, _val };
+            return e;
+        }
 
-        // todo deconstructor
+        static inline Exp* Lam(Id* _var, Exp* _exp)
+        {
+            Exp* e = new Exp {};
+            e->_type = LAM;
+            e->lam = { _var, _exp };
+            return e;
+        }
+
+        static inline Exp* Cond(Exp* _c, Exp* _t, Exp* _f)
+        {
+            Exp* e = new Exp {};
+            e->_type = COND;
+            e->cond = { _c, _t, _f };
+            return e;
+        }
+
+        static inline Exp* Match(Exp* _exp, Array<uptr<Alter>>* _alter)
+        {
+            Exp* e = new Exp {};
+            e->_type = MATCH;
+            e->match = { _exp, _alter };
+            return e;
+        }
+
+        ~Exp()
+        {
+            switch (_type) {
+                case PINT:
+                    DELETE_PTR(ilit);
+                    break;
+                case PFLOAT:
+                    DELETE_PTR(flit);
+                    break;
+                case PCHAR:
+                    DELETE_PTR(clit);
+                    break;
+                case PSTRING:
+                    DELETE_PTR(slit);
+                    break;
+                case SEQ:
+                    DELETE_PTR(seq.l);
+                    DELETE_PTR(seq.r);
+                    break;
+                case APP:
+                    DELETE_PTR(app.l);
+                    DELETE_PTR(app.r);
+                    break;
+                case REF:
+                    DELETE_PTR(ref);
+                    break;
+                case LET:
+                    DELETE_PTR(let.val);
+                    DELETE_PTR(let.var);
+                    break;
+                case LAM:
+                    DELETE_PTR(lam.exp);
+                    DELETE_PTR(lam.var);
+                    break;
+                case COND:
+                    DELETE_PTR(cond.c);
+                    DELETE_PTR(cond.t);
+                    DELETE_PTR(cond.f);
+                    break;
+                case MATCH:
+                    DELETE_PTR(match.exp);
+                    DELETE_PTR(match.alter);
+                    break;
+            }
+        }
 
         friend ostream& operator<<(ostream& os, const Exp& exp)
         {
@@ -342,8 +425,29 @@ namespace ast {
             case PSTRING:
                 os << *exp.slit;
                 break;
+            case SEQ:
+                os << *exp.seq.l << " ; " << *exp.seq.r;
+                break;
             case APP:
                 os << "(" << *exp.app.l << *exp.app.r << ")";
+                break;
+            case REF:
+                os << *exp.ref;
+                break;
+            case LET:
+                os << *exp.let.var << " := " << *exp.let.val;
+                break;
+            case LAM:
+                os << " \\ " << *exp.lam.var << " -> " << *exp.lam.exp;
+                break;
+            case COND:
+                os << " IF " << *exp.cond.c << " THEN " << *exp.cond.t << " ELSE " << *exp.cond.f << " END";
+                break;
+            case MATCH:
+                os << " MATCH " << *exp.match.exp << " WITH ";
+                for (auto& alter : *exp.match.alter) {
+                    os << endl << *alter;
+                }
                 break;
             }
             return os;
@@ -398,10 +502,10 @@ namespace ast {
         {
             switch(_type) {
             case DATA:
-                delete data;
+                DELETE_PTR(data);
                 break;
             case COMB:
-                delete comb;
+                DELETE_PTR(comb);
                 break;
             }
         }
