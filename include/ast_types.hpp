@@ -426,10 +426,10 @@ namespace ast {
                 os << *exp.slit;
                 break;
             case SEQ:
-                os << *exp.seq.l << " ; " << *exp.seq.r;
+                os << *exp.seq.l << endl << " ; " << *exp.seq.r;
                 break;
             case APP:
-                os << "(" << *exp.app.l << *exp.app.r << ")";
+                os << "(" << *exp.app.l << " " << *exp.app.r << ")";
                 break;
             case REF:
                 os << *exp.ref;
@@ -471,9 +471,11 @@ namespace ast {
         friend ostream& operator<<(ostream& os, const Comb& comb)
         {
             os << "COMB " << *comb.id << endl;
+            os << "( |";
             for (auto& arg : comb.args) {
-                os << *arg << " ";
+                os << *arg << "| ";
             }
+            os << ")";
             os << " : " << *comb.ty << " = " << endl;
             os << *comb.val << endl;
             os << "END_COMB";
@@ -555,7 +557,7 @@ namespace ast {
 
     struct Token {
         enum T {
-            INT_VAL,
+            INT_VAL = 0,
             FLOAT_VAL,
             CHAR_VAL,
             STRING_VAL,
@@ -570,6 +572,8 @@ namespace ast {
             COMB,
 
             EXP,
+            ALTER,
+            ALTER_LIST,
 
             TOPLEVEL,
 
@@ -605,6 +609,8 @@ namespace ast {
             Data* data;
             Comb* comb;
             Exp* exp;
+            Exp::Alter* alter;
+            Array<uptr<Exp::Alter>>* alter_list;
             Toplevel* toplevel;
 
             Array<void*> *list;

@@ -58,12 +58,17 @@ data                    { RET(DATA); }
 if                      { RET(IF); }
 then                    { RET(THEN); }
 else                    { RET(ELSE); }
+match                   { RET(MATCH); }
 
+","                     { RET(COMMA); }
 "->"                    { RET(ARROW); }
 ":"                     { RET(COLON); }
 ";"                     { RET(SEMICOLON); }
+"|>"                    { RET(SPIPE); }
 "|"                     { RET(PIPE); }
 "="                     { RET(EQUALS); }
+"$"                     { RET(DOLLAR); }
+"\\"                    { RET(BACKSLASH); }
 
 "\("                    { RET(LPAREN); }
 "\)"                    { RET(RPAREN); }

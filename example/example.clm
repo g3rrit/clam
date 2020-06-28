@@ -11,7 +11,23 @@ data bar
     | B 
         ; b : bool
 
-let lol a : int : int 
-    = 10
+let lol : int = 10
+let lol (a : int) : int = 10
+let lol (a : int, b : char) : int = 10
+
+let lol (a : int) : int
+    = match 10
+        | A a -> 1
+        | B b -> 2
+      end
+    ; \ a -> if a then a b else a b |> c $ d
+    ; a b c $ d
+    ; if 
+        if a 
+        then b 
+        else c 
+      then 
+        if a then b else c
+      else a b
 
 end

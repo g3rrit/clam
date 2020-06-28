@@ -44,6 +44,12 @@ Location to_loc(YYLTYPE* yylocp)
         l.field = value; \
     } while(0)
 
+#define FORWARD(l, r) \
+    do  { \
+        l._type = r._type; \
+        l.field = r.field; \
+    } while(0)
+
 }
 
 %initial-action { yyset_extra(0, scanner); }
@@ -64,12 +70,17 @@ Location to_loc(YYLTYPE* yylocp)
 %token IF
 %token THEN
 %token ELSE
+%token MATCH
 
+%token COMMA
 %token ARROW
 %token COLON
+%token SPIPE
 %token PIPE
 %token SEMICOLON
 %token EQUALS
+%token DOLLAR
+%token BACKSLASH
 
 %token LPAREN
 %token RPAREN
@@ -128,12 +139,14 @@ variant_p
             $$.variant->add_record($4.record);
         }
     | variant_p PIPE variant_field_p {
+            FORWARD($$, $1);
             $$.variant->add_record($3.record);
         }
     ;
 
 variant_field_p
     : variant_field_p SEMICOLON field_p { 
+            FORWARD($$, $1);
             $$.record->add_field($3.field);
         }
     | id_p { SET($$, RECORD, record, (new ast::Record { $1.id })); }
@@ -141,22 +154,32 @@ variant_field_p
 comb_p
     : LET id_p args_p COLON type_p EQUALS exp_p {
             SET($$, COMB, comb, (new ast::Comb { $2.id, $5.type, $7.exp }));
+            printf("here\n");
             for (void* arg : *$3.list) {
+                //printf("hsdfsd\n");
                 $$.comb->add_arg(static_cast<ast::Field*>(arg));
             }
         }
     ;
 
 args_p
-    : /* empty */ { SET($$, LIST, list, (new Array<void*> {})); }
-    | args_p field_p { $$.list->push_back($2.field); }
+    : args_empty_p { FORWARD($$, $1); }
+    | LPAREN args_noempty_p RPAREN { FORWARD($$, $2); }
     ;
 
-exp_p
-    : int_p { SET($$, EXP, exp, (ast::Exp::Ilit($1.int_lit))); }
-    | float_p { SET($$, EXP, exp, (ast::Exp::Flit($1.float_lit))); }
-    | string_p { SET($$, EXP, exp, (ast::Exp::Slit($1.string_lit))); }
-    | char_p { SET($$, EXP, exp, (ast::Exp::Clit($1.char_lit))); }
+args_empty_p
+    : /* empty */ { SET($$, LIST, list, (new Array<void*> {})); }
+    ;
+
+args_noempty_p
+    : field_p { 
+            SET($$, LIST, list, (new Array<void*> {}));
+            $$.list->push_back($1.field); 
+        }
+    | args_noempty_p COMMA field_p { 
+            FORWARD($$, $1);
+            $$.list->push_back($3.field); 
+        }
     ;
 
 field_p
@@ -177,6 +200,71 @@ float_p : FLOAT { $$ = $1; } ;
 string_p : STRING { $$ = $1; } ;
 
 char_p : CHAR { $$ = $1; } ;
+
+exp_basic_p
+    : int_p { SET($$, EXP, exp, (ast::Exp::Ilit($1.int_lit))); }
+    | float_p { SET($$, EXP, exp, (ast::Exp::Flit($1.float_lit))); }
+    | string_p { SET($$, EXP, exp, (ast::Exp::Slit($1.string_lit))); }
+    | char_p { SET($$, EXP, exp, (ast::Exp::Clit($1.char_lit))); }
+    | id_p { SET($$, EXP, exp, (ast::Exp::Ref($1.id))); }
+    | LPAREN exp_p RPAREN { FORWARD($$, $2); }
+    | MATCH exp_p alter_list_p END { SET($$, EXP, exp, (ast::Exp::Match($2.exp , $3.alter_list))); }
+    ;
+
+alter_list_p
+    : alter_p { 
+            SET($$, ALTER_LIST, alter_list, (new Array<uptr<ast::Exp::Alter>> {}));
+            $$.alter_list->emplace_back($1.alter);
+        }
+    | alter_list_p alter_p { 
+            FORWARD($$, $1);
+            $$.alter_list->emplace_back($2.alter);
+        }
+    ;
+
+alter_p 
+    : PIPE id_p id_p ARROW exp_p {
+            SET($$, ALTER, alter, (new ast::Exp::Alter { $2.id, $3.id, $5.exp }));
+        }
+    ;
+
+exp_p
+    : exp_seq_p { FORWARD($$, $1); }
+
+exp_seq_p
+    : exp_seq_p SEMICOLON exp_let_p { SET($$, EXP, exp, (ast::Exp::Seq($1.exp, $3.exp))); }
+    | exp_lam_p { FORWARD($$, $1); }
+    ;
+
+exp_let_p
+    : id_p COLON EQUALS exp_lam_p { SET($$, EXP, exp, (ast::Exp::Let($1.id, $4.exp))); }
+    | exp_lam_p { FORWARD($$, $1); }
+    ;
+
+exp_lam_p
+    : BACKSLASH id_p ARROW exp_cond_p { SET($$, EXP, exp, (ast::Exp::Lam($2.id, $4.exp))); }
+    | exp_cond_p { FORWARD($$, $1); }
+    ;
+
+exp_cond_p
+    : IF exp_p THEN exp_p ELSE exp_spipe_p { SET($$, EXP, exp, (ast::Exp::Cond($2.exp, $4.exp, $6.exp))); }
+    | exp_spipe_p { FORWARD($$, $1); }
+    ;
+
+exp_spipe_p
+    : exp_spipe_p SPIPE exp_dollar_p { SET($$, EXP, exp, (ast::Exp::App($3.exp, $1.exp))); }
+    | exp_dollar_p { FORWARD($$, $1);}
+    ;
+
+exp_dollar_p
+    : exp_dollar_p DOLLAR exp_app_p { SET($$, EXP, exp, (ast::Exp::App($1.exp, $3.exp))); }
+    | exp_app_p { FORWARD($$, $1); }
+    ;
+
+exp_app_p
+    : exp_app_p exp_basic_p { SET($$, EXP, exp, (ast::Exp::App($1.exp, $2.exp))); }
+    | exp_basic_p { FORWARD($$, $1); }
+    ;
 
 %%
 
