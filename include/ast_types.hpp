@@ -61,19 +61,29 @@ namespace ast {
         }
     };
 
-    struct Type {
-        enum T {
-            PRIM,
-            FN,
-        } _type;
+#define TYPE_LIST(X) \
+    X(PRIM, prim, Id*) \
+    X(FN, fn, struct { Type* l; Type* r; })
 
-        union {
-            Id* prim;
-            struct {
-                Type* l;
-                Type* r;
-            } fn;
-        };
+#define MAKE_ENUM_VAR(cons, var, type) \
+    cons,
+
+#define MAKE_ENUM(LIST) \
+    enum { \
+        LIST(MAKE_ENUM_VAR) \
+    } _type;
+
+#define MAKE_UNION_VAR(cons, var, type) \
+    type var;
+
+#define MAKE_UNION(LIST) \
+    union { \
+        LIST(MAKE_UNION_VAR) \
+    };
+
+    struct Type {
+        MAKE_ENUM(TYPE_LIST)
+        MAKE_UNION(TYPE_LIST)
 
         Type(Id* _prim)
             : _type(PRIM), prim(_prim) {}
