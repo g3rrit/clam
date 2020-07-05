@@ -13,6 +13,7 @@
 #include <utility>
 #include <cassert>
 #include <functional>
+#include <tuple>
 
 typedef std::uint8_t u8;
 typedef std::uint16_t u16;
@@ -42,6 +43,12 @@ using Map = std::map<K, T>;
 
 template <class T>
 using Queue = std::queue<T>;
+
+template <class... Types>
+using Tuple = std::tuple<Types...>;
+
+using std::make_tuple;
+using std::get;
 
 //template <class R, class... Args>
 //using Fn = std::function<R(Args...)>;

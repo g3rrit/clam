@@ -154,9 +154,7 @@ variant_field_p
 comb_p
     : LET id_p args_p COLON type_p EQUALS exp_p {
             SET($$, COMB, comb, (new ast::Comb { $2.id, $5.type, $7.exp }));
-            printf("here\n");
             for (void* arg : *$3.list) {
-                //printf("hsdfsd\n");
                 $$.comb->add_arg(static_cast<ast::Field*>(arg));
             }
         }
@@ -187,9 +185,13 @@ field_p
     ;
 
 type_p
-    : id_p ARROW type_p { SET($$, TYPE, type, (new ast::Type { new ast::Type { $1.id }, $3.type })); }
-    | id_p { SET($$, TYPE, type, (new ast::Type { $1.id })); }
+    : prim_type_p ARROW type_p { SET($$, TYPE, type, (new ast::Type { ast::Type::Fun { $1.type, $3.type } })); }
+    | id_p { SET($$, TYPE, type, (new ast::Type { ast::Type::Prim { $1.id } })); }
     ;
+
+prim_type_p
+    : id_p { SET($$, TYPE, type, (new ast::Type { ast::Type::Prim { $1.id } })); }
+    | LPAREN type_p RPAREN { FORWARD($$, $2); }
 
 id_p : ID {  $$ = $1; } ;
 

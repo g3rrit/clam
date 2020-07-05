@@ -61,59 +61,24 @@ namespace ast {
         }
     };
 
-#define TYPE_LIST(X) \
-    X(PRIM, prim, Id*) \
-    X(FN, fn, struct { Type* l; Type* r; })
-
-#define MAKE_ENUM_VAR(cons, var, type) \
-    cons,
-
-#define MAKE_ENUM(LIST) \
-    enum { \
-        LIST(MAKE_ENUM_VAR) \
-    } _type;
-
-#define MAKE_UNION_VAR(cons, var, type) \
-    type var;
-
-#define MAKE_UNION(LIST) \
-    union { \
-        LIST(MAKE_UNION_VAR) \
-    };
-
     struct Type {
-        MAKE_ENUM(TYPE_LIST)
-        MAKE_UNION(TYPE_LIST)
 
-        Type(Id* _prim)
-            : _type(PRIM), prim(_prim) {}
+#define TYPE_LIST(X, Y)     \
+    X(Prim, Id*)            \
+    X(Fun, Type*, Type*)
 
-        Type(Type* _l, Type* _r)
-            : _type(FN), fn({ _l, _r }) {}
+        MAKE_VARIANT(Type, TYPE_LIST)
 
-        ~Type()
+        friend ostream& operator<<(ostream& os, Type& type) 
         {
-            switch(_type) {
-            case PRIM:
-                DELETE_PTR(prim);
-                break;
-            case FN:
-                DELETE_PTR(fn.l);
-                DELETE_PTR(fn.r);
-                break;
-            }
-        }
-
-        friend ostream& operator<<(ostream& os, const Type& type) 
-        {
-            switch (type._type) {
-            case PRIM:
-                os << *type.prim;
-                break;
-            case FN:
-                os << "(" << *type.fn.l << " -> " << *type.fn.r << ")";
-                break;
-            }
+            type.visit<void>(overload {
+                [&] (const Prim& prim) {
+                    os << *get<0>(prim);
+                },
+                [&] (const Fun& fun) {
+                    os << "(" << *get<0>(fun) << " -> " << *get<1>(fun) << ")";
+                }
+            });
             return os;
         }
     };
@@ -179,49 +144,31 @@ namespace ast {
     };
 
     struct Data {
-        enum T {
-            RECORD,
-            VARIANT,
-        } _type;
 
-        union {
-            Record* rec;
-            Variant* var;
-        };
+#define DATA_LIST(X, Y) \
+    Y(Record*) \
+    Y(Variant*)
 
-        Data(Record* _rec)
-            : _type(RECORD), rec(_rec) {}
+        MAKE_VARIANT(Data, DATA_LIST)
 
-        Data(Variant* _var)
-            : _type(VARIANT), var(_var) {}
-        
-        ~Data()
+        friend ostream& operator<<(ostream& os, Data& data)
         {
-            switch(_type) {
-            case RECORD:
-                DELETE_PTR(rec);
-                break;
-            case VARIANT:
-                DELETE_PTR(var);
-                break;
-            }
-        }
-
-        friend ostream& operator<<(ostream& os, const Data& data)
-        {
-            switch (data._type) {
-            case RECORD:
-                os << *data.rec;
-                break;
-            case VARIANT:
-                os << *data.var;
-                break;
-            }
-            return os;
+            data.visit<void>(overload {
+                [&] (const Record* r) {
+                    os << *r;
+                },
+                [&] (const Variant* v) {
+                    os << *v;
+                }
+            });
         }
     };
 
     struct Exp {
+
+#define EXP_LIST(X, Y) \
+    Y(Int_Lit*) \
+
         enum {
             PINT,
             PFLOAT,
@@ -288,7 +235,7 @@ namespace ast {
 
         static inline Exp* Ilit(Int_Lit* _ilit)
         {
-            Exp* e = new Exp {};
+            Exp* e = mem::alloc<Exp>();
             e->_type = PINT; 
             e->ilit = _ilit;
             return e;
