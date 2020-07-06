@@ -161,6 +161,7 @@ namespace ast {
                     os << *v;
                 }
             });
+            return os;
         }
     };
 
@@ -168,20 +169,16 @@ namespace ast {
 
 #define EXP_LIST(X, Y) \
     Y(Int_Lit*) \
-
-        enum {
-            PINT,
-            PFLOAT,
-            PCHAR,
-            PSTRING,
-            SEQ,
-            APP,
-            REF,
-            LET,
-            LAM,
-            COND,
-            MATCH
-        } _type;
+    Y(Float_Lit*) \
+    Y(Char_Lit*) \
+    Y(String_Lit*) \
+    Y(Id*) \
+    X(Seq, Exp*, Exp*) \
+    X(App, Exp*, Exp*) \
+    X(Let, Id*, Exp*) \
+    X(Lam, Id*, Exp*) \
+    X(Cond, Exp*, Exp*, Exp*) \
+    X(Match, Exp*, Array<uptr<Alter>>*)
 
         struct Alter {
             uptr<Id>  con;
@@ -198,215 +195,49 @@ namespace ast {
             }
         };
  
-        union {
-            Int_Lit*    ilit;
-            Float_Lit*  flit;
-            Char_Lit*   clit;
-            String_Lit* slit;
-            struct {
-                Exp* l;
-                Exp* r;
-            } seq;
-            struct {
-                Exp* l;
-                Exp* r;
-            } app;
-            Id* ref;
-            struct {
-                Id* var;
-                Exp* val;
-            } let;
-            struct {
-                Id* var;
-                Exp* exp;
-            } lam;
-            struct {
-                Exp* c;
-                Exp* t;
-                Exp* f;
-            } cond;
-            struct {
-                Exp* exp;
-                Array<uptr<Alter>>* alter;
-            } match;
-        };
+        MAKE_VARIANT(Exp, EXP_LIST)
 
-        Exp() = default;
-
-        static inline Exp* Ilit(Int_Lit* _ilit)
+        friend ostream& operator<<(ostream& os, Exp& exp)
         {
-            Exp* e = mem::alloc<Exp>();
-            e->_type = PINT; 
-            e->ilit = _ilit;
-            return e;
-        }
-
-        static inline Exp* Flit(Float_Lit* _flit)
-        {
-            Exp* e = new Exp {};
-            e->_type = PFLOAT;
-            e->flit = _flit;
-            return e;
-        }
-
-        static inline Exp* Slit(String_Lit* _slit)
-        {
-            Exp* e = new Exp {};
-            e->_type = PSTRING;
-            e->slit = _slit;
-            return e;
-        }
-
-        static inline Exp* Clit(Char_Lit* _clit)
-        {
-            Exp* e = new Exp {};
-            e->_type = PCHAR;
-            e->clit = _clit;
-            return e;
-        }
-
-        static inline Exp* Seq(Exp* _l, Exp* _r) 
-        {
-            Exp* e = new Exp {};
-            e->_type = SEQ;
-            e->seq = { _l, _r };
-            return e;
-        }
-
-        static inline Exp* App(Exp* _l, Exp* _r) 
-        {
-            Exp* e = new Exp {};
-            e->_type = APP;
-            e->app = { _l, _r };
-            return e;
-        }
-        
-        static inline Exp* Ref(Id* _ref)
-        {
-            Exp* e = new Exp {};
-            e->_type = REF;
-            e->ref = _ref;
-            return e;
-        }
-
-        static inline Exp* Let(Id* _var, Exp* _val)
-        {
-            Exp* e = new Exp {};
-            e->_type = LET;
-            e->let = { _var, _val };
-            return e;
-        }
-
-        static inline Exp* Lam(Id* _var, Exp* _exp)
-        {
-            Exp* e = new Exp {};
-            e->_type = LAM;
-            e->lam = { _var, _exp };
-            return e;
-        }
-
-        static inline Exp* Cond(Exp* _c, Exp* _t, Exp* _f)
-        {
-            Exp* e = new Exp {};
-            e->_type = COND;
-            e->cond = { _c, _t, _f };
-            return e;
-        }
-
-        static inline Exp* Match(Exp* _exp, Array<uptr<Alter>>* _alter)
-        {
-            Exp* e = new Exp {};
-            e->_type = MATCH;
-            e->match = { _exp, _alter };
-            return e;
-        }
-
-        ~Exp()
-        {
-            switch (_type) {
-                case PINT:
-                    DELETE_PTR(ilit);
-                    break;
-                case PFLOAT:
-                    DELETE_PTR(flit);
-                    break;
-                case PCHAR:
-                    DELETE_PTR(clit);
-                    break;
-                case PSTRING:
-                    DELETE_PTR(slit);
-                    break;
-                case SEQ:
-                    DELETE_PTR(seq.l);
-                    DELETE_PTR(seq.r);
-                    break;
-                case APP:
-                    DELETE_PTR(app.l);
-                    DELETE_PTR(app.r);
-                    break;
-                case REF:
-                    DELETE_PTR(ref);
-                    break;
-                case LET:
-                    DELETE_PTR(let.val);
-                    DELETE_PTR(let.var);
-                    break;
-                case LAM:
-                    DELETE_PTR(lam.exp);
-                    DELETE_PTR(lam.var);
-                    break;
-                case COND:
-                    DELETE_PTR(cond.c);
-                    DELETE_PTR(cond.t);
-                    DELETE_PTR(cond.f);
-                    break;
-                case MATCH:
-                    DELETE_PTR(match.exp);
-                    DELETE_PTR(match.alter);
-                    break;
-            }
-        }
-
-        friend ostream& operator<<(ostream& os, const Exp& exp)
-        {
-            switch (exp._type) {
-            case PINT:
-                os << *exp.ilit;
-                break;
-            case PFLOAT:
-                os << *exp.flit;
-                break;
-            case PCHAR:
-                os << *exp.clit;
-                break;
-            case PSTRING:
-                os << *exp.slit;
-                break;
-            case SEQ:
-                os << *exp.seq.l << endl << " ; " << *exp.seq.r;
-                break;
-            case APP:
-                os << "(" << *exp.app.l << " " << *exp.app.r << ")";
-                break;
-            case REF:
-                os << *exp.ref;
-                break;
-            case LET:
-                os << *exp.let.var << " := " << *exp.let.val;
-                break;
-            case LAM:
-                os << " \\ " << *exp.lam.var << " -> " << *exp.lam.exp;
-                break;
-            case COND:
-                os << " IF " << *exp.cond.c << " THEN " << *exp.cond.t << " ELSE " << *exp.cond.f << " END";
-                break;
-            case MATCH:
-                os << " MATCH " << *exp.match.exp << " WITH ";
-                for (auto& alter : *exp.match.alter) {
-                    os << endl << *alter;
-                }
-                break;
-            }
+            exp.visit<void>(overload {
+                [&] (const Int_Lit* ilit) {
+                    os << *ilit;
+                },
+                [&] (const Float_Lit* flit) {
+                    os << *flit;
+                },
+                [&] (const Char_Lit* clit) {
+                    os << *clit;
+                },
+                [&] (const String_Lit* slit) {
+                    os << *slit;
+                },
+                [&] (const Id* ref) {
+                    os << *ref;
+                },
+                [&] (const Seq& seq) {
+                    os << *get<0>(seq) << endl << " ; " << *get<1>(seq);
+                },
+                [&] (const App& app) {
+                    os << " ( " << *get<0>(app) << " " << *get<1>(app) << " ) ";
+                },
+                [&] (const Let& let) {
+                    os << *get<0>(let) << " := " << *get<1>(let);
+                },
+                [&] (const Lam& lam) {
+                    os << " \\ " << *get<0>(lam) << " -> " << *get<1>(lam);
+                },
+                [&] (const Cond& cond) {
+                    os << "IF " << *get<0>(cond) << endl << " THEN " <<  *get<1>(cond) << endl << " ELSE " << *get<2>(cond) << " END_IF";
+                },
+                [&] (const Match& match) {
+                    os << "MATCH " << *get<0>(match) << endl;
+                    for (auto& alt : *get<1>(match)) {
+                        os << *alt << endl;
+                    }
+                    os << "END_MATCH";
+                },
+            });
             return os;
         }
     };
@@ -441,44 +272,23 @@ namespace ast {
     };
 
     struct Toplevel {
-        enum {
-            DATA,
-            COMB,
-        } _type;
-        
-        union {
-            Data* data;
-            Comb* comb;
-        };
 
-        Toplevel(Data* _data)
-            : _type(DATA), data(_data) {}
+#define TOPLEVEL_LIST(X, Y) \
+    Y(Data*) \
+    Y(Comb*)
 
-        Toplevel(Comb* _comb)
-            : _type(COMB), comb(_comb) {}
+        MAKE_VARIANT(Toplevel, TOPLEVEL_LIST)
 
-        ~Toplevel()
+        friend ostream& operator<<(ostream& os, Toplevel& tl)
         {
-            switch(_type) {
-            case DATA:
-                DELETE_PTR(data);
-                break;
-            case COMB:
-                DELETE_PTR(comb);
-                break;
-            }
-        }
-
-        friend ostream& operator<<(ostream& os, const Toplevel& tl)
-        {
-            switch (tl._type) {
-            case DATA:
-                os << *tl.data;
-                break;
-            case COMB:
-                os << *tl.comb;
-                break;
-            }
+            tl.visit<void>(overload {
+                [&] (Data* data) {
+                    os << *data;
+                },
+                [&] (Comb* comb) {
+                    os << *comb;
+                }
+            });
             return os;
         }
     };

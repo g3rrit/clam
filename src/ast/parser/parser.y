@@ -204,13 +204,13 @@ string_p : STRING { $$ = $1; } ;
 char_p : CHAR { $$ = $1; } ;
 
 exp_basic_p
-    : int_p { SET($$, EXP, exp, (ast::Exp::Ilit($1.int_lit))); }
-    | float_p { SET($$, EXP, exp, (ast::Exp::Flit($1.float_lit))); }
-    | string_p { SET($$, EXP, exp, (ast::Exp::Slit($1.string_lit))); }
-    | char_p { SET($$, EXP, exp, (ast::Exp::Clit($1.char_lit))); }
-    | id_p { SET($$, EXP, exp, (ast::Exp::Ref($1.id))); }
+    : int_p { SET($$, EXP, exp, (new ast::Exp { $1.int_lit })); }
+    | float_p { SET($$, EXP, exp, (new ast::Exp { $1.float_lit })); }
+    | string_p { SET($$, EXP, exp, (new ast::Exp { $1.string_lit })); }
+    | char_p { SET($$, EXP, exp, (new ast::Exp { $1.char_lit })); }
+    | id_p { SET($$, EXP, exp, (new ast::Exp { $1.id })); }
     | LPAREN exp_p RPAREN { FORWARD($$, $2); }
-    | MATCH exp_p alter_list_p END { SET($$, EXP, exp, (ast::Exp::Match($2.exp , $3.alter_list))); }
+    | MATCH exp_p alter_list_p END { SET($$, EXP, exp, (new ast::Exp { ast::Exp::Match { $2.exp , $3.alter_list } })); }
     ;
 
 alter_list_p
@@ -234,37 +234,37 @@ exp_p
     : exp_seq_p { FORWARD($$, $1); }
 
 exp_seq_p
-    : exp_seq_p SEMICOLON exp_let_p { SET($$, EXP, exp, (ast::Exp::Seq($1.exp, $3.exp))); }
+    : exp_seq_p SEMICOLON exp_let_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::Seq { $1.exp, $3.exp } })); }
     | exp_lam_p { FORWARD($$, $1); }
     ;
 
 exp_let_p
-    : id_p COLON EQUALS exp_lam_p { SET($$, EXP, exp, (ast::Exp::Let($1.id, $4.exp))); }
+    : id_p COLON EQUALS exp_lam_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::Let { $1.id, $4.exp } })); }
     | exp_lam_p { FORWARD($$, $1); }
     ;
 
 exp_lam_p
-    : BACKSLASH id_p ARROW exp_cond_p { SET($$, EXP, exp, (ast::Exp::Lam($2.id, $4.exp))); }
+    : BACKSLASH id_p ARROW exp_cond_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::Lam { $2.id, $4.exp } })); }
     | exp_cond_p { FORWARD($$, $1); }
     ;
 
 exp_cond_p
-    : IF exp_p THEN exp_p ELSE exp_spipe_p { SET($$, EXP, exp, (ast::Exp::Cond($2.exp, $4.exp, $6.exp))); }
+    : IF exp_p THEN exp_p ELSE exp_spipe_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::Cond { $2.exp, $4.exp, $6.exp } })); }
     | exp_spipe_p { FORWARD($$, $1); }
     ;
 
 exp_spipe_p
-    : exp_spipe_p SPIPE exp_dollar_p { SET($$, EXP, exp, (ast::Exp::App($3.exp, $1.exp))); }
+    : exp_spipe_p SPIPE exp_dollar_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::App { $3.exp, $1.exp } })); }
     | exp_dollar_p { FORWARD($$, $1);}
     ;
 
 exp_dollar_p
-    : exp_dollar_p DOLLAR exp_app_p { SET($$, EXP, exp, (ast::Exp::App($1.exp, $3.exp))); }
+    : exp_dollar_p DOLLAR exp_app_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::App { $1.exp, $3.exp } })); }
     | exp_app_p { FORWARD($$, $1); }
     ;
 
 exp_app_p
-    : exp_app_p exp_basic_p { SET($$, EXP, exp, (ast::Exp::App($1.exp, $2.exp))); }
+    : exp_app_p exp_basic_p { SET($$, EXP, exp, (new ast::Exp { ast::Exp::App { $1.exp, $2.exp } })); }
     | exp_basic_p { FORWARD($$, $1); }
     ;
 
