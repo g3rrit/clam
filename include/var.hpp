@@ -15,10 +15,10 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
 #define MAKE_STRUCT_Y(cons)
 
 
-#define GET_TYPES_X(cons, ...)                                        \
+#define GET_TYPES_X(cons, ...)                                      \
     cons ,
 
-#define GET_TYPES_Y(cons) \
+#define GET_TYPES_Y(cons)                                           \
     cons ,
 
 #define MAKE_VARIANT(TYPE, LIST)                                    \
