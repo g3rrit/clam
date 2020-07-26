@@ -71,14 +71,14 @@ namespace ast {
 
         friend ostream& operator<<(ostream& os, Type& type) 
         {
-            type.visit<void>(overload {
+            visit(overload {
                 [&] (const Prim& prim) {
                     os << *get<0>(prim);
                 },
                 [&] (const Fun& fun) {
                     os << "(" << *get<0>(fun) << " -> " << *get<1>(fun) << ")";
                 }
-            });
+            }, type);
             return os;
         }
     };
@@ -153,14 +153,14 @@ namespace ast {
 
         friend ostream& operator<<(ostream& os, Data& data)
         {
-            data.visit<void>(overload {
+            visit(overload {
                 [&] (const Record* r) {
                     os << *r;
                 },
                 [&] (const Variant* v) {
                     os << *v;
                 }
-            });
+            }, data);
             return os;
         }
     };
@@ -199,7 +199,7 @@ namespace ast {
 
         friend ostream& operator<<(ostream& os, Exp& exp)
         {
-            exp.visit<void>(overload {
+            visit(overload {
                 [&] (const Int_Lit* ilit) {
                     os << *ilit;
                 },
@@ -237,7 +237,7 @@ namespace ast {
                     }
                     os << "END_MATCH";
                 },
-            });
+            }, exp);
             return os;
         }
     };
@@ -281,14 +281,14 @@ namespace ast {
 
         friend ostream& operator<<(ostream& os, Toplevel& tl)
         {
-            tl.visit<void>(overload {
+            visit(overload {
                 [&] (Data* data) {
                     os << *data;
                 },
                 [&] (Comb* comb) {
                     os << *comb;
                 }
-            });
+            }, tl);
             return os;
         }
     };

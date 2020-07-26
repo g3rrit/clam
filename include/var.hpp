@@ -4,6 +4,8 @@
 #include <variant>
 #include <tuple>
 
+using std::visit;
+
 template<class... Ts> struct overload : Ts... { using Ts::operator()...; };
 template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
@@ -28,21 +30,11 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
     TYPE(T& t) : var(t) {}                                          \
     template<class T>                                               \
     TYPE(T&& t) : var(t) {}                                         \
-    template <class T, class F>                                     \
-    T visit(F&& f)                                                  \
+    template <class R, class Vis>                                   \
+    friend R visit(Vis&& vis, TYPE&& t)                 \
     {                                                               \
-        struct _F : F {                                             \
-            using F::operator();                                    \
-            T operator()(const std::monostate&)                     \
-                {                                                   \
-                    if constexpr (std::is_same<T, void>::value) {   \
-                        return;                                     \
-                    } else {                                        \
-                        return *(T*)0; }                            \
-                    }                                               \
-        };                                                          \
-        _F* _f = static_cast<_F*>(&f);                                 \
-        return std::visit(*_f, var);                                 \
+        return std::visit<R, Vis, std::variant< LIST(GET_TYPES_X, GET_TYPES_Y) std::monostate >>(vis, t.var);                                \
     }
+
 
 #endif
